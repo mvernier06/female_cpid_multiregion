@@ -126,14 +126,14 @@ df_test <- read_ods(test)
 
 
 
-df_compare <- full_join(
+df_compare_Ins_1787 <- full_join(
   df_origine %>% select(MGI.symbol, origine = 2),
   df_test %>% select(MGI.symbol, test = 2),
   by = "MGI.symbol"
 ) %>%
   mutate(diff = test - origine)
 
-df_compare_plot <- df_compare %>%
+df_compare_plot <- df_compare_Ins_1787 %>%
   # Garder seulement les gènes avec diff != 0 ou NA
   filter(diff != 0 | is.na(diff)) %>%
   mutate(diff_bin = cut(diff, breaks = 20))  # 30 bins pour les diff numériques
@@ -172,12 +172,12 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
   ) +
   theme_minimal()
 
-summary(df_compare$origine)
-summary(df_compare$test)
+summary(df_compare_Ins_1787$origine)
+summary(df_compare_Ins_1787$test)
 
 cor(df_scatter$origine, df_scatter$test, method = "pearson") 
 
-n_total <- nrow(df_compare)
+n_total <- nrow(df_compare_Ins_1787)
 
 table_recap <- tibble(
   categorie = c(
@@ -188,11 +188,88 @@ table_recap <- tibble(
     "origine = NA & test = 0"
   ),
   n_genes = c(
-    sum(df_compare$diff == 0, na.rm = TRUE),
-    sum(df_compare$diff != 0, na.rm = TRUE),
-    sum(is.na(df_compare$diff)),
-    sum(is.na(df_compare$test) & df_compare$origine == 0, na.rm = TRUE),
-    sum(is.na(df_compare$origine) & df_compare$test == 0, na.rm = TRUE)
+    sum(df_compare_Ins_1787$diff == 0, na.rm = TRUE),
+    sum(df_compare_Ins_1787$diff != 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1787$diff)),
+    sum(is.na(df_compare_Ins_1787$test) & df_compare_Ins_1787$origine == 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1787$origine) & df_compare_Ins_1787$test == 0, na.rm = TRUE)
+  )
+) %>%
+  mutate(
+    percent = 100 * n_genes / n_total
+  )
+
+table_recap
+
+
+
+df_compare_Ins_1788 <- full_join(
+  df_origine %>% select(MGI.symbol, origine = 3),
+  df_test %>% select(MGI.symbol, test = 3),
+  by = "MGI.symbol"
+) %>%
+  mutate(diff = test - origine)
+
+df_compare_plot <- df_compare_Ins_1788 %>%
+  # Garder seulement les gènes avec diff != 0 ou NA
+  filter(diff != 0 | is.na(diff)) %>%
+  mutate(diff_bin = cut(diff, breaks = 20))  # 30 bins pour les diff numériques
+
+# Ajouter les NA comme catégorie
+df_compare_plot$diff_bin <- addNA(df_compare_plot$diff_bin)
+
+ggplot(df_compare_plot, aes(x = diff_bin)) +
+  geom_bar(fill = "steelblue", color = "black") +
+  labs(
+    title = "Histogramme des différences entre les résultats d'origines et le control positif",
+    x = "diff (counts test - counts origine)",
+    y = "Nombre de gènes"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+
+df_scatter <- df_origine %>%
+  select(MGI.symbol, origine = 3) %>%
+  full_join(df_test %>% select(MGI.symbol, test = 3),
+            by = "MGI.symbol") %>%
+  # Supprimer les lignes avec NA
+  filter(!is.na(origine) & !is.na(test))
+
+# Scatter plot log-log
+ggplot(df_scatter, aes(x = origine, y = test)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(
+    title = "Comparaison des counts entre origine et test (contrôle positif Ins 1788)",
+    x = "Counts origine",
+    y = "Counts test"
+  ) +
+  theme_minimal()
+
+summary(df_compare_Ins_1788$origine)
+summary(df_compare_Ins_1788$test)
+
+cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+
+n_total <- nrow(df_compare_Ins_1788)
+
+table_recap <- tibble(
+  categorie = c(
+    "diff = 0",
+    "diff ≠ 0",
+    "diff = NA",
+    "test = NA & origine = 0",
+    "origine = NA & test = 0"
+  ),
+  n_genes = c(
+    sum(df_compare_Ins_1788$diff == 0, na.rm = TRUE),
+    sum(df_compare_Ins_1788$diff != 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1788$diff)),
+    sum(is.na(df_compare_Ins_1788$test) & df_compare_Ins_1788$origine == 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1788$origine) & df_compare_Ins_1788$test == 0, na.rm = TRUE)
   )
 ) %>%
   mutate(
