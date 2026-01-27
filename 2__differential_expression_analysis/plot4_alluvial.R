@@ -1,3 +1,5 @@
+## Attention, faut restart R avant de charger les librairies ##
+
 library(tidyverse)
 library(ggplot2)
 library(ggalluvial)
@@ -66,12 +68,10 @@ get_alluvial_patterns(regionlist)
 
 #### COLOR PALETTE ####
 # get a list of all patterns
-all_patterns_lst <- unique(c(df_new_BLA %>% .$diffexpressed_alltp %>% unique,
-                             df_new_DRN %>% .$diffexpressed_alltp %>% unique,
+all_patterns_lst <- unique(c(df_new_ACC %>% .$diffexpressed_alltp %>% unique,
                              df_new_Hb %>% .$diffexpressed_alltp %>% unique,
                              df_new_Ins %>% .$diffexpressed_alltp %>% unique,
-                             df_new_NAc %>% .$diffexpressed_alltp %>% unique,
-                             df_new_VTA %>% .$diffexpressed_alltp %>% unique))
+                             df_new_Nac %>% .$diffexpressed_alltp %>% unique))
 all_patterns_lst <- all_patterns_lst[order(as.character(all_patterns_lst))]
 write_rds(all_patterns_lst, "all_patterns_lst.rds")
 
@@ -138,44 +138,44 @@ alluvial_plots(regionlist)
 
 
 
-# plot ENORA
-reg <- "DRN"
-
-df <- get(paste0("df_new_", reg)) %>% 
-  dplyr::group_by(diffexpressed_tp1, diffexpressed_tp2, diffexpressed_tp3,
-                  diffexpressed_alltp) %>% 
-  summarise(n = n()) 
-
-# Define the factors
-df$diffexpressed_tp1 <- factor(df$diffexpressed_tp1, levels = c("UP", "ns", "DOWN"))
-df$diffexpressed_tp2 <- factor(df$diffexpressed_tp2, levels = c("UP", "ns", "DOWN"))
-df$diffexpressed_tp3 <- factor(df$diffexpressed_tp3, levels = c("UP", "ns", "DOWN"))
-df$diffexpressed_alltp <- factor(df$diffexpressed_alltp)
-
-print(df$diffexpressed_alltp)
-pal_reg <- pal[names(pal) %in% df$diffexpressed_alltp]
-print(length(pal_reg))
-
-df <- df %>% arrange(desc(diffexpressed_alltp))
-
-top_patterns <- df %>% arrange(desc(n))
-setwd(output.path)
-
-p_alluvial <- ggplot(df,
-                     aes(y = n,
-                         axis1 = diffexpressed_tp1, 
-                         axis2 = diffexpressed_tp2, 
-                         axis3 = diffexpressed_tp3)) +
-  geom_alluvium(aes(fill = diffexpressed_alltp)) +
-  guides(fill = "none") +
-  geom_stratum(alpha = .25, width = 1/7, reverse = TRUE) +
-  geom_text(stat = "stratum", aes(label = after_stat(stratum)),
-            reverse = TRUE) +
-  scale_x_continuous(breaks = 1:3, labels = c("TP1", "TP2", "TP3")) +
-  labs(y="Number of genes") +
-  ggtitle(paste("Pattern of gene expression within the", reg)) +
-  scale_fill_manual(values=unname(pal_reg)) +
-  theme_bw()
-p_alluvial
-setwd(plot.path)
-ggsave(paste0("alluvial_", reg, "_Enora.png"), plot=p_alluvial, width=1900, height=1200, units="px", scale=1)  
+# # plot ENORA
+# reg <- "ACC"
+# 
+# df <- get(paste0("df_new_", reg)) %>% 
+#   dplyr::group_by(diffexpressed_tp1, diffexpressed_tp2, diffexpressed_tp3,
+#                   diffexpressed_alltp) %>% 
+#   summarise(n = n()) 
+# 
+# # Define the factors
+# df$diffexpressed_tp1 <- factor(df$diffexpressed_tp1, levels = c("UP", "ns", "DOWN"))
+# df$diffexpressed_tp2 <- factor(df$diffexpressed_tp2, levels = c("UP", "ns", "DOWN"))
+# df$diffexpressed_tp3 <- factor(df$diffexpressed_tp3, levels = c("UP", "ns", "DOWN"))
+# df$diffexpressed_alltp <- factor(df$diffexpressed_alltp)
+# 
+# print(df$diffexpressed_alltp)
+# pal_reg <- pal[names(pal) %in% df$diffexpressed_alltp]
+# print(length(pal_reg))
+# 
+# df <- df %>% arrange(desc(diffexpressed_alltp))
+# 
+# top_patterns <- df %>% arrange(desc(n))
+# setwd(output.path)
+# 
+# p_alluvial <- ggplot(df,
+#                      aes(y = n,
+#                          axis1 = diffexpressed_tp1, 
+#                          axis2 = diffexpressed_tp2, 
+#                          axis3 = diffexpressed_tp3)) +
+#   geom_alluvium(aes(fill = diffexpressed_alltp)) +
+#   guides(fill = "none") +
+#   geom_stratum(alpha = .25, width = 1/7, reverse = TRUE) +
+#   geom_text(stat = "stratum", aes(label = after_stat(stratum)),
+#             reverse = TRUE) +
+#   scale_x_continuous(breaks = 1:3, labels = c("TP1", "TP2", "TP3")) +
+#   labs(y="Number of genes") +
+#   ggtitle(paste("Pattern of gene expression within the", reg)) +
+#   scale_fill_manual(values=unname(pal_reg)) +
+#   theme_bw()
+# p_alluvial
+# setwd(plot.path)
+# ggsave(paste0("alluvial_", reg, "_Enora.png"), plot=p_alluvial, width=1900, height=1200, units="px", scale=1)  
