@@ -94,7 +94,7 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = reg)) +
 
 ggsave("PCA_raw_counts_colored_by_region_labeled.PNG",
        width = 8, height = 6, dpi = 300)
-
+###############################################################################################
 #### HEAT MAP (fig1)####
 setwd("/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/")
 df <- scale(vst_counts)
@@ -177,6 +177,7 @@ legend("bottomright", legend = names(group_cols), fill = group_cols,
        title = "Group", cex = 1.2, bty = "n")
 dev.off()
 
+#################################################################
 #### T-SNE ON RAW COUNTS ####
 vst_counts
 setwd(output.path)
@@ -187,6 +188,50 @@ t <- tsne(vst_counts, labels=coldata$reg, legendtextsize = 15,axistextsize = 15,
 t
 ggsave(plot=t, "tsne_raw_counts.png")
 ?tsne
+t$data$sample <- coldata$sample
+t_labeled <- t +
+  geom_text_repel(
+    data = subset(t$data, sample == "Ins.1837"),
+    aes(label = sample),
+    size = 4,
+    fontface = "bold",
+    color = "black"
+  )
+
+t_labeled
+ggsave("tsne_raw_counts_Ins1837_labeled.png",
+       plot = t_labeled,
+       width = 8, height = 6, dpi = 300)
+
+t_labeled_all <- t +
+  geom_text_repel(
+    data = t$data,
+    aes(label = sample),
+    size = 3,           # taille réduite pour 163 samples
+    max.overlaps = Inf, # permet de forcer l'affichage de tous
+    segment.size = 0.3  # petite ligne de liaison
+  )
+
+t_labeled_all
+
+ggsave("tsne_raw_counts_all_samples_labeled.png",
+       plot = t_labeled_all,
+       width = 12, height = 8, dpi = 300)
+
+t_labeled <- t +
+  geom_text_repel(
+    data = subset(t$data, sample == "Hb.1839"),
+    aes(label = sample),
+    size = 4,
+    fontface = "bold",
+    color = "black"
+  )
+
+t_labeled
+ggsave("tsne_raw_counts_Hb.1839_labeled.png",
+       plot = t_labeled,
+       width = 8, height = 6, dpi = 300)
+
 
 
 ## test: run 10X to see differences
