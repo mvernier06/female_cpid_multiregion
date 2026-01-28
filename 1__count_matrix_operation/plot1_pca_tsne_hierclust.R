@@ -5,7 +5,7 @@ library(M3C)
 library(DESeq2)
 library(corrplot)
 library(readODS)
-
+library(ggrepel)
 
 rm(list=ls())
 
@@ -78,6 +78,22 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = reg)) +
   )
 ggsave(plot = last_plot(), "PCA_raw_counts_colored_by_region.PNG")
 
+ggplot(pca_df, aes(x = PC1, y = PC2, color = reg)) +
+  geom_point(size = 2) +
+  geom_text_repel(
+    data = subset(pca_df, sample == "Ins.1837"),
+    aes(label = sample),
+    size = 4,
+    fontface = "bold"
+  ) +
+  theme_classic() +
+  labs(
+    title = "PCA colored by regions",
+    x = paste0("PC1 (", round(100*summary(pca)$importance[2,1],0), "%)"),
+    y = paste0("PC2 (", round(100*summary(pca)$importance[2,2],0), "%)"))
+
+ggsave("PCA_raw_counts_colored_by_region_labeled.PNG",
+       width = 8, height = 6, dpi = 300)
 
 #### HEAT MAP (fig1)####
 setwd("/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/")
