@@ -16,7 +16,7 @@ counts <- read_csv(raw_counts_path)
 coldata <- read_ods(coldata_path)
 
 
-counts_long <- cpunts %>%
+counts_long <- counts %>%
   pivot_longer(
     cols = -MGI.symbol,              
     names_to = "sample",
@@ -25,7 +25,7 @@ counts_long <- cpunts %>%
 
 
 counts <- counts %>% column_to_rownames("MGI.symbol")
-"Ntng2" %in% rownames(vst_counts)
+"Ucma" %in% rownames(counts)
 
 Camk2a <- counts_long %>%
   filter(MGI.symbol == "Camk2a")
@@ -63,21 +63,21 @@ Camk2a_annot %>%
   )
 
 
-Ntng2 <- counts_long %>%
-  filter(MGI.symbol == "Ntng2")
-Ntng2_annot <- Ntng2 %>%
+Drd2 <- counts_long %>%
+  filter(MGI.symbol == "Drd2")
+Drd2_annot <- Drd2 %>%
   left_join(coldata, by = "sample")
 
-ggplot(Ntng2_annot, aes(x = reg, y = expression, label = sample)) +
+ggplot(Drd2_annot, aes(x = reg, y = expression, label = sample)) +
   geom_point(size = 3, alpha = 0.8) +
   geom_text(vjust = -0.5, size = 3) +
   theme_classic() +
   labs(
-    title = "Ntng2 – détection d'échantillons aberrants",
+    title = "Drd2 – détection d'échantillons aberrants",
     x = "Région",
     y = "Expression"
   )
-ggplot(Ntng2_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
+ggplot(Drd2_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
   geom_point(size = 3) +
   geom_text(vjust = -0.5, size = 3) +
   theme_classic()

@@ -277,3 +277,196 @@ table_recap <- tibble(
   )
 
 table_recap
+
+
+##########################################################################################################################################
+#################### En ne gardant que les gènes utilisés dans l'analyse (après filtrage des gènes faiblement exprimés)##################
+
+filtered_genes <- "/home/marinevernier/Documents/cpid_multiregion/cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
+origine <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/samples_interet_originel.ods"
+test <-"/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/samples_interet_test.ods"
+
+filtered <- read_csv(filtered_genes)
+counts_origine <- read_ods(origine)
+counts_test <- read_ods(test)
+
+genes_kept <- filtered %>% pull(MGI.symbol)
+
+# filtrer origine et test
+counts_origine_filt <- counts_origine %>%
+  filter(MGI.symbol %in% genes_kept)
+
+counts_test_filt <- counts_test %>%
+  filter(MGI.symbol %in% genes_kept)
+all(filtered$MGI.symbol %in% counts_origine_filt$MGI.symbol)
+all(filtered$MGI.symbol %in% counts_test_filt$MGI.symbol)
+
+genes_missing_in_test <- setdiff(
+  filtered$MGI.symbol,
+  counts_test$MGI.symbol
+)
+
+length(genes_missing_in_test)
+head(genes_missing_in_test)
+
+df_compare_Ins_1787 <- full_join(
+  counts_origine_filt %>% select(MGI.symbol, origine = 2),
+  counts_test_filt %>% select(MGI.symbol, test = 2),
+  by = "MGI.symbol"
+) %>%
+  mutate(diff = test - origine)
+
+df_compare_plot <- df_compare_Ins_1787 %>%
+  # Garder seulement les gènes avec diff != 0 ou NA
+  filter(diff != 0 | is.na(diff)) %>%
+  mutate(diff_bin = cut(diff, breaks = 20))  # 30 bins pour les diff numériques
+
+# Ajouter les NA comme catégorie
+df_compare_plot$diff_bin <- addNA(df_compare_plot$diff_bin)
+
+ggplot(df_compare_plot, aes(x = diff_bin)) +
+  geom_bar(fill = "steelblue", color = "black") +
+  labs(
+    title = "Histogramme des différences entre les résultats d'origines et le control positif",
+    x = "diff (counts test - counts origine)",
+    y = "Nombre de gènes"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+
+df_scatter <- counts_origine_filt %>%
+  select(MGI.symbol, origine = 2) %>%
+  full_join(counts_test_filt %>% select(MGI.symbol, test = 2),
+            by = "MGI.symbol") %>%
+  # Supprimer les lignes avec NA
+  filter(!is.na(origine) & !is.na(test))
+
+# Scatter plot log-log
+ggplot(df_scatter, aes(x = origine, y = test)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(
+    title = "Comparaison des counts entre origine et test (contrôle positif)",
+    x = "Counts origine",
+    y = "Counts test"
+  ) +
+  theme_minimal()
+
+summary(df_compare_Ins_1787$origine)
+summary(df_compare_Ins_1787$test)
+
+cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+
+n_total <- nrow(df_compare_Ins_1787)
+
+table_recap <- tibble(
+  categorie = c(
+    "diff = 0",
+    "diff ≠ 0",
+    "diff = NA",
+    "test = NA & origine = 0",
+    "origine = NA & test = 0"
+  ),
+  n_genes = c(
+    sum(df_compare_Ins_1787$diff == 0, na.rm = TRUE),
+    sum(df_compare_Ins_1787$diff != 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1787$diff)),
+    sum(is.na(df_compare_Ins_1787$test) & df_compare_Ins_1787$origine == 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1787$origine) & df_compare_Ins_1787$test == 0, na.rm = TRUE)
+  )
+) %>%
+  mutate(
+    percent = 100 * n_genes / n_total
+  )
+
+table_recap
+
+
+
+df_compare_Ins_1788 <- full_join(
+  counts_origine_filt %>% select(MGI.symbol, origine = 3),
+  counts_test_filt %>% select(MGI.symbol, test = 3),
+  by = "MGI.symbol"
+) %>%
+  mutate(diff = test - origine)
+
+df_compare_plot <- df_compare_Ins_1788 %>%
+  # Garder seulement les gènes avec diff != 0 ou NA
+  filter(diff != 0 | is.na(diff)) %>%
+  mutate(diff_bin = cut(diff, breaks = 20))  # 30 bins pour les diff numériques
+
+# Ajouter les NA comme catégorie
+df_compare_plot$diff_bin <- addNA(df_compare_plot$diff_bin)
+
+ggplot(df_compare_plot, aes(x = diff_bin)) +
+  geom_bar(fill = "steelblue", color = "black") +
+  labs(
+    title = "Histogramme des différences entre les résultats d'origines et le control positif",
+    x = "diff (counts test - counts origine)",
+    y = "Nombre de gènes"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+
+df_scatter <- counts_origine_filt %>%
+  select(MGI.symbol, origine = 3) %>%
+  full_join(counts_test_filt %>% select(MGI.symbol, test = 3),
+            by = "MGI.symbol") %>%
+  # Supprimer les lignes avec NA
+  filter(!is.na(origine) & !is.na(test))
+
+# Scatter plot log-log
+ggplot(df_scatter, aes(x = origine, y = test)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(
+    title = "Comparaison des counts entre origine et test (contrôle positif Ins 1788)",
+    x = "Counts origine",
+    y = "Counts test"
+  ) +
+  theme_minimal()
+
+summary(df_compare_Ins_1788$origine)
+summary(df_compare_Ins_1788$test)
+
+cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+
+n_total <- nrow(df_compare_Ins_1788)
+
+table_recap <- tibble(
+  categorie = c(
+    "diff = 0",
+    "diff ≠ 0",
+    "diff = NA",
+    "test = NA & origine = 0",
+    "origine = NA & test = 0"
+  ),
+  n_genes = c(
+    sum(df_compare_Ins_1788$diff == 0, na.rm = TRUE),
+    sum(df_compare_Ins_1788$diff != 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1788$diff)),
+    sum(is.na(df_compare_Ins_1788$test) & df_compare_Ins_1788$origine == 0, na.rm = TRUE),
+    sum(is.na(df_compare_Ins_1788$origine) & df_compare_Ins_1788$test == 0, na.rm = TRUE)
+  )
+) %>%
+  mutate(
+    percent = 100 * n_genes / n_total
+  )
+
+table_recap
+
+sum(is.na(counts_origine))
+sum(is.na(counts_test))
+sum(is.na(counts_origine_filt))
+sum(is.na(counts_test_filt))
+sum(is.na(df_compare_Ins_1788))
+
+length(intersect(counts_test_filt, counts_origine_filt))
+d <- intersect(counts_test_filt, counts_origine_filt)
+d
