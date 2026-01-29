@@ -2,13 +2,14 @@ library(tidyverse)
 library(DESeq2)
 library(readODS)
 
+
 rm(list=ls())
 
-
+setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
 #### PATHS ####
-raw_counts.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/count_data_positive_control/cpid_multireg_females_counts.txt"
-coldata.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/count_data_positive_control/coldata_control.ods"
-output.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/2__differential_expression_analysis/CPID_sham_vs_cuff_betaprior.csv" # file to save results
+raw_counts.path <- "female_cpid_multiregion/with_positive_control/data/count_data_positive_control/cpid_multireg_females_counts.txt"
+coldata.path <- "female_cpid_multiregion/with_positive_control/data/count_data_positive_control/coldata_control.ods"
+output.path <- "female_cpid_multiregion/with_positive_control/data/2__differential_expression_analysis/CPID_sham_vs_cuff_betaprior.csv" # file to save results
 
 #### Formatting raw counts ####
 raw_counts <- read.table(raw_counts.path, header = TRUE,
@@ -282,9 +283,9 @@ table_recap
 ##########################################################################################################################################
 #################### En ne gardant que les gènes utilisés dans l'analyse (après filtrage des gènes faiblement exprimés)##################
 
-filtered_genes <- "/home/marinevernier/Documents/cpid_multiregion/cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-origine <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/samples_interet_originel.ods"
-test <-"/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/samples_interet_test.ods"
+filtered_genes <- "cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
+origine <- "female_cpid_multiregion/with_positive_control/data/samples_interet_originel.ods"
+test <-"female_cpid_multiregion/with_positive_control/data/samples_interet_test.ods"
 
 filtered <- read_csv(filtered_genes)
 counts_origine <- read_ods(origine)
@@ -461,12 +462,12 @@ table_recap <- tibble(
 
 table_recap
 
-sum(is.na(counts_origine))
-sum(is.na(counts_test))
-sum(is.na(counts_origine_filt))
-sum(is.na(counts_test_filt))
-sum(is.na(df_compare_Ins_1788))
-
-length(intersect(counts_test_filt, counts_origine_filt))
-d <- intersect(counts_test_filt, counts_origine_filt)
-d
+df_scatter %>%
+  mutate(
+    log2FC = log2((test + 1) / (origine + 1))
+  ) %>%
+  summarise(
+    pct_big_change = mean(abs(log2FC) > 0.1) * 100,
+    pct_small_change = mean(abs(log2FC) < 0.1) * 100,
+    pct_very_small = mean(abs(log2FC) < 0.01) * 100
+  )
