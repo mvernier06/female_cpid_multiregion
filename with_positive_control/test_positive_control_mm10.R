@@ -183,7 +183,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1787$origine)
 summary(df_compare_Ins_1787$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1787)
 
@@ -260,7 +260,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1788$origine)
 summary(df_compare_Ins_1788$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1788)
 
@@ -367,7 +367,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1787$origine)
 summary(df_compare_Ins_1787$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1787)
 
@@ -444,7 +444,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1788$origine)
 summary(df_compare_Ins_1788$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1788)
 

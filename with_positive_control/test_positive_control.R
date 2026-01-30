@@ -119,8 +119,8 @@ write_csv(annotated_counts, output.path)
 #######################################################################################################################################
 # attention, j'ai creer à la main deux .ods ne gardant que les samples que je veux comparer, en partant de annotated_counts.csv
 
-origine <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/samples_interet_originel.ods"
-test <-"/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/samples_interet_test.ods"
+origine <- "female_cpid_multiregion/with_positive_control/data/samples_interet_originel.ods"
+test <-"female_cpid_multiregion/with_positive_control/data/samples_interet_test.ods"
 
 df_origine <- read_ods(origine)
 df_test <- read_ods(test)
@@ -176,7 +176,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1787$origine)
 summary(df_compare_Ins_1787$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1787)
 
@@ -253,7 +253,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1788$origine)
 summary(df_compare_Ins_1788$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1788)
 
@@ -359,7 +359,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1787$origine)
 summary(df_compare_Ins_1787$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1787)
 
@@ -436,7 +436,7 @@ ggplot(df_scatter, aes(x = origine, y = test)) +
 summary(df_compare_Ins_1788$origine)
 summary(df_compare_Ins_1788$test)
 
-cor(df_scatter$origine, df_scatter$test, method = "pearson") 
+cor(df_scatter$origine, df_scatter$test, method = "spearman") 
 
 n_total <- nrow(df_compare_Ins_1788)
 
@@ -461,7 +461,7 @@ table_recap <- tibble(
   )
 
 table_recap
-
+ 
 df_scatter %>%
   mutate(
     log2FC = log2((test + 1) / (origine + 1))
