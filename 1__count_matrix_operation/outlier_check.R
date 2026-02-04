@@ -27,27 +27,27 @@ counts_long <- counts %>%
     values_to = "expression"
   )
 
-genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b")
+genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b", "Mog")
 
 counts <- counts %>% column_to_rownames("MGI.symbol")
-"Drd2" %in% rownames(counts)
+"Mog" %in% rownames(counts)
 
-Drd2 <- counts_long %>%
-  filter(MGI.symbol == "Drd2")
-Drd2_annot <- Drd2 %>%
+Mog <- counts_long %>%
+  filter(MGI.symbol == "Mog")
+Mog_annot <- Mog %>%
   left_join(coldata, by = "sample")
 
-ggplot(Drd2_annot, aes(x = reg, y = expression, label = sample)) +
+ggplot(Mog_annot, aes(x = reg, y = expression, label = sample)) +
   geom_point(size = 3, alpha = 0.8) +
   geom_text(vjust = -0.5, size = 3) +
   theme_classic() +
   labs(
-    title = "Drd2 – détection d'échantillons aberrants",
+    title = "Mog – détection d'échantillons aberrants",
     x = "Région",
     y = "Expression"
   )
 
-ggplot(Drd2_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
+ggplot(Thy1_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
   geom_point(size = 3) +
   geom_text(vjust = -0.5, size = 3) +
   theme_classic()
