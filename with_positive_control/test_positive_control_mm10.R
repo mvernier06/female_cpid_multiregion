@@ -171,10 +171,9 @@ df_scatter <- df_origine %>%
 ggplot(df_scatter, aes(x = origine, y = test)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  scale_x_log10() +
-  scale_y_log10() +
+
   labs(
-    title = "Comparaison des counts entre origine et test (contrôle positif)",
+    title = "Comparaison des counts entre origine et test, Ins 1787",
     x = "Counts origine",
     y = "Counts test"
   ) +
@@ -184,6 +183,7 @@ summary(df_compare_Ins_1787$origine)
 summary(df_compare_Ins_1787$test)
 
 cor(df_scatter$origine, df_scatter$test, method = "spearman") 
+
 
 n_total <- nrow(df_compare_Ins_1787)
 
@@ -248,10 +248,10 @@ df_scatter <- df_origine %>%
 ggplot(df_scatter, aes(x = origine, y = test)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  scale_x_log10() +
-  scale_y_log10() +
+  # scale_x_log10() +
+  # scale_y_log10() +
   labs(
-    title = "Comparaison des counts entre origine et test (contrôle positif Ins 1788)",
+    title = "Comparaison des counts entre origine et test,Ins 1788",
     x = "Counts origine",
     y = "Counts test"
   ) +
@@ -355,10 +355,10 @@ df_scatter <- counts_origine_filt %>%
 ggplot(df_scatter, aes(x = origine, y = test)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  scale_x_log10() +
-  scale_y_log10() +
+  # scale_x_log10() +
+  # scale_y_log10() +
   labs(
-    title = "Comparaison des counts entre origine et test (contrôle positif)",
+    title = "Comparaison des counts entre origine et test, Ins 1787",
     x = "Counts origine",
     y = "Counts test"
   ) +
@@ -432,10 +432,10 @@ df_scatter <- counts_origine_filt %>%
 ggplot(df_scatter, aes(x = origine, y = test)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  scale_x_log10() +
-  scale_y_log10() +
+  # scale_x_log10() +
+  # scale_y_log10() +
   labs(
-    title = "Comparaison des counts entre origine et test (contrôle positif Ins 1788)",
+    title = "Comparaison des counts entre origine et test, Ins 1788",
     x = "Counts origine",
     y = "Counts test"
   ) +
@@ -479,4 +479,5 @@ df_scatter %>%
     pct_small_change = mean(abs(log2FC) < 0.1) * 100,
     pct_very_small = mean(abs(log2FC) < 0.01) * 100
   )
+
 
