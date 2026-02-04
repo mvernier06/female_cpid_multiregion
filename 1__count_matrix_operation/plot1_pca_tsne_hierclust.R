@@ -9,6 +9,8 @@ library(ggrepel)
 
 rm(list=ls())
 
+table(coldata$reg,  coldata$timepoint, coldata$group)
+
 setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
 
 #### PATHS ####
