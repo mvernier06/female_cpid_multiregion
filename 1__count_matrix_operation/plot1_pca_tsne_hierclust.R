@@ -9,15 +9,13 @@ library(ggrepel)
 
 rm(list=ls())
 
-BiocManager::install("FactoMineR")
-
-BiocManager::install("factoextra")
+setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
 
 #### PATHS ####
 raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
 coldata_path <- "female_cpid_multiregion/data/count_data/coldata.ods"
 plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/"
-output.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
+# output.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
 
 coldata <- read_ods(coldata_path)
 
@@ -39,7 +37,7 @@ res <- M3C(vst_counts, removeplots = TRUE, iters=25,
           objective='PAC', fsize=8, lthick=1, dotsize=1.25) # M3C fait un clusreing consensus 
 res
 
-
+res$plots[[1]]
 
 setwd(plot.path)
 res$plots[[2]]
@@ -98,9 +96,10 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = reg)) +
 
 ggsave("PCA_raw_counts_colored_by_region_labeled.PNG",
        width = 8, height = 6, dpi = 300)
+
 ###############################################################################################
 #### HEAT MAP (fig1)####
-setwd("/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/")
+#setwd("/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/")
 df <- scale(vst_counts)
 df
 
@@ -237,10 +236,38 @@ ggsave("tsne_raw_counts_Hb.1839_labeled.png",
        width = 8, height = 6, dpi = 300)
 
 
+library(patchwork)
 
-## test: run 10X to see differences
-#for(i in 1:10){
-#  ti <- tsne(vst_counts, labels=coldata$reg, legendtextsize = 15,axistextsize = 15,dotsize=3) +
-#    labs( title="T-sne on VST normalized counts")
-#  ggsave(plot = ti, paste0("tsne_raw_counts", i,".png"))
-#}
+plots <- list()
+
+for(i in 1:9){   
+  set.seed(i)    # ensures each run is different but reproducible
+  
+  ti <- tsne(
+    vst_counts,
+    labels = coldata$reg,
+    legendtextsize = 15,
+    axistextsize = 15,
+    dotsize = 3
+  ) +
+    labs(title = paste("T-SNE run", i, "on VST normalized counts"))
+  ti$data$sample <- coldata$sample
+  t_labeled_all <- ti +
+    geom_text_repel(
+      data = ti$data,
+      aes(x = X1, y = X2, label = sample),  # coordonnées explicites
+      size = 3,
+      max.overlaps = Inf,
+      segment.size = 0.3,
+      box.padding = 0.4,     # espace autour du texte
+      point.padding = 0.3,   # espace autour du point
+      seed = 42              # positions reproductibles
+    )
+  
+  plots[[i]] <- t_labeled_all
+}
+
+wrap_plots(plots, ncol = 3)
+plots[[1]]
+
+
