@@ -38,7 +38,6 @@ res <- M3C(vst_counts, removeplots = TRUE, iters=25,
 res
 
 res$plots[[1]]
-
 setwd(plot.path)
 res$plots[[2]]
 ggsave(plot=last_plot(), "PAC_raw_counts.png")
@@ -270,4 +269,158 @@ for(i in 1:9){
 wrap_plots(plots, ncol = 3)
 plots[[1]]
 
+###################################################################################################################
+#################################      PCA intra region      ######################################################
+
+setwd("/home/marinevernier/projets/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/pca_intra_reg/")
+
+sample_ins <- coldata %>%
+  filter(reg == "Ins") %>%
+  pull(sample)
+
+counts_ins <- vst_counts[, sample_ins]
+
+pca_ins <- prcomp(t(counts_ins), scale. = FALSE)
+
+pca_df <- as.data.frame(pca_ins$x) %>%
+  rownames_to_column("sample") %>%
+  left_join(
+    coldata %>% select(sample, timepoint, group),
+    by = "sample"
+  )
+
+pca_df$timepoint <- as.factor(pca_df$timepoint)
+ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
+  geom_point(size = 3) +
+  # geom_text_repel(
+  #   size = 3,
+  #   max.overlaps = Inf,
+  #   show.legend = FALSE
+  # ) +
+  geom_text_repel(
+    data = subset(pca_df, sample == "Ins.1837"),
+    aes(label = sample),
+    size = 3
+  )+
+  theme_classic() +
+  labs(
+    title = "PCA intra-région Ins",
+    x = paste0("PC1 (", round(100 * summary(pca_ins)$importance[2,1], 0), "%)"),
+    y = paste0("PC2 (", round(100 * summary(pca_ins)$importance[2,2], 0), "%)")
+  )
+ggsave(plot=last_plot(), "PCA_Ins_labeled_time_point.png")
+
+##
+
+sample_acc <- coldata %>%
+  filter(reg == "ACC") %>%
+  pull(sample)
+
+counts_acc <- vst_counts[, sample_acc]
+
+pca_acc <- prcomp(t(counts_acc), scale. = FALSE)
+
+pca_df <- as.data.frame(pca_acc$x) %>%
+  rownames_to_column("sample") %>%
+  left_join(
+    coldata %>% select(sample, timepoint, group),
+    by = "sample"
+  )
+
+pca_df$timepoint <- as.factor(pca_df$timepoint)
+ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
+  geom_point(size = 3) +
+  # geom_text_repel(
+  #   size = 3,
+  #   max.overlaps = Inf,
+  #   show.legend = FALSE
+  # ) +
+  # geom_text_repel(
+  #   data = subset(pca_df, sample == "Ins.1837"),
+  #   aes(label = sample),
+  #   size = 3
+  # )+
+  theme_classic() +
+  labs(
+    title = "PCA intra-région ACC",
+    x = paste0("PC1 (", round(100 * summary(pca_acc)$importance[2,1], 0), "%)"),
+    y = paste0("PC2 (", round(100 * summary(pca_acc)$importance[2,2], 0), "%)")
+  )
+ggsave(plot=last_plot(), "PCA_Acc_time_point.png")
+
+###
+
+sample_Hb <- coldata %>%
+  filter(reg == "Hb") %>%
+  pull(sample)
+
+counts_Hb <- vst_counts[, sample_Hb]
+
+pca_Hb <- prcomp(t(counts_Hb), scale. = FALSE)
+
+pca_df <- as.data.frame(pca_Hb$x) %>%
+  rownames_to_column("sample") %>%
+  left_join(
+    coldata %>% select(sample, timepoint, group),
+    by = "sample"
+  )
+
+pca_df$timepoint <- as.factor(pca_df$timepoint)
+ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
+  geom_point(size = 3) +
+  geom_text_repel(
+    size = 3,
+    max.overlaps = Inf,
+    show.legend = FALSE
+  ) +
+  # geom_text_repel(
+  #   data = subset(pca_df, sample == "Ins.1837"),
+  #   aes(label = sample),
+  #   size = 3
+  # )+
+  theme_classic() +
+  labs(
+    title = "PCA intra-région Hb",
+    x = paste0("PC1 (", round(100 * summary(pca_Hb)$importance[2,1], 0), "%)"),
+    y = paste0("PC2 (", round(100 * summary(pca_Hb)$importance[2,2], 0), "%)")
+  )
+ggsave(plot=last_plot(), "PCA_Hb_labeled_group.png")
+
+##
+
+sample_nac <- coldata %>%
+  filter(reg == "Nac") %>%
+  pull(sample)
+
+counts_nac <- vst_counts[, sample_nac]
+
+pca_nac <- prcomp(t(counts_nac), scale. = FALSE)
+
+pca_df <- as.data.frame(pca_nac$x) %>%
+  rownames_to_column("sample") %>%
+  left_join(
+    coldata %>% select(sample, timepoint, group),
+    by = "sample"
+  )
+
+pca_df$timepoint <- as.factor(pca_df$timepoint)
+ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
+  geom_point(size = 3) +
+  # geom_text_repel(
+  #   size = 3,
+  #   max.overlaps = Inf,
+  #   show.legend = FALSE
+  # ) +
+  geom_text_repel(
+    data = subset(pca_df, sample == "Nac.1837"),
+    aes(label = sample),
+    size = 3
+  )+
+  theme_classic() +
+  labs(
+    title = "PCA intra-région Nac",
+    x = paste0("PC1 (", round(100 * summary(pca_nac)$importance[2,1], 0), "%)"),
+    y = paste0("PC2 (", round(100 * summary(pca_nac)$importance[2,2], 0), "%)")
+  )
+ggsave(plot=last_plot(), "PCA_nac_labeled_group.png")
 
