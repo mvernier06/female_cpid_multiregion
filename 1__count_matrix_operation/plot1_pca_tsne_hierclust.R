@@ -9,10 +9,14 @@ library(ggrepel)
 
 rm(list=ls())
 
+BiocManager::install("FactoMineR")
+
+BiocManager::install("factoextra")
+
 #### PATHS ####
-raw_counts_path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-coldata_path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/count_data/coldata.ods"
-plot.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/"
+raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
+coldata_path <- "female_cpid_multiregion/data/count_data/coldata.ods"
+plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/"
 output.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
 
 coldata <- read_ods(coldata_path)

@@ -1,3 +1,5 @@
+## Dans cette partie je vérifie si les "outliers" identifiés par PCA et T-sne sont vraiment bizarres 
+
 library(tidyverse)
 library(readODS)
 library(ggplot2)
@@ -5,10 +7,12 @@ library(DESeq2)
 
 rm(list=ls())
 
+setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
+
 #### PATHS ####
-raw_counts_path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-coldata_path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/count_data/coldata.ods"
-plot.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
+raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
+coldata_path <- "female_cpid_multiregion/data/count_data/coldata.ods"
+plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
 
 
 
@@ -23,45 +27,10 @@ counts_long <- counts %>%
     values_to = "expression"
   )
 
+genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b")
 
 counts <- counts %>% column_to_rownames("MGI.symbol")
-"Ucma" %in% rownames(counts)
-
-Camk2a <- counts_long %>%
-  filter(MGI.symbol == "Camk2a")
-Camk2a_annot <- Camk2a %>%
-  left_join(coldata, by = "sample")
-
-ggplot(Camk2a_annot, aes(x = reg, y = expression, label = sample)) +
-  geom_point(size = 3, alpha = 0.8) +
-  geom_text(vjust = -0.5, size = 3) +
-  theme_classic() +
-  labs(
-    title = "Camk2a – détection d'échantillons aberrants",
-    x = "Région",
-    y = "Expression"
-  )
-
-ggplot(Camk2a_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
-  geom_point(size = 3) +
-  geom_text(vjust = -0.5, size = 3) +
-  theme_classic()
-
-Camk2a_annot %>%
-  arrange(expression) %>%
-  mutate(sample_ord = factor(sample, levels = sample)) %>%
-  ggplot(aes(x = sample_ord, y = log2(expression + 1), color = reg)) +
-  geom_point(size = 3) +
-  theme_classic() +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5)
-  ) +
-  labs(
-    x = "Sample",
-    y = "log2(Camk2a + 1)",
-    color = "Région"
-  )
-
+"Drd2" %in% rownames(counts)
 
 Drd2 <- counts_long %>%
   filter(MGI.symbol == "Drd2")
@@ -77,38 +46,71 @@ ggplot(Drd2_annot, aes(x = reg, y = expression, label = sample)) +
     x = "Région",
     y = "Expression"
   )
+
 ggplot(Drd2_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
   geom_point(size = 3) +
   geom_text(vjust = -0.5, size = 3) +
   theme_classic()
 
-
-genes_glut <- c("Slc17a7", "Slc17a6", "Camk2a", "Camk2b", "Ntng2")
-
-signature <- counts_long %>%
-  filter(MGI.symbol %in% genes_glut) %>%
-  group_by(sample) %>%
-  summarise(mean_expr = mean(log2(expression + 1)))
-
-signature %>%
-  left_join(coldata, by = "sample") %>%
-  ggplot(aes(x = reg, y = mean_expr, label = sample)) +
+grp_annot %>%
+  arrange(expression) %>%
+  mutate(sample_ord = factor(sample, levels = sample)) %>%
+  ggplot(aes(x = sample_ord, y = log2(expression + 1), color = reg)) +
   geom_point(size = 3) +
-  geom_text(vjust = -0.5, size = 3) +
-  theme_classic()
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5)
+  ) +
+  labs(
+    x = "Sample",
+    y = "log2(Grp + 1)",
+    color = "Région"
+  )
+
+############################################################################################################
+
+all(colnames(counts) == coldata$sample)
+
+mean_intra_cor <- function(counts, coldata, region,
+                           exclude_sample = NULL,
+                           method = "pearson") {
+  
+  meta_sub <- coldata %>% filter(reg == region)
+  
+  if (!is.null(exclude_sample)) {
+    meta_sub <- meta_sub %>% filter(sample != exclude_sample)
+  }
+  
+  if (nrow(meta_sub) < 3) return(NA_real_)
+  
+  counts_sub <- counts[, meta_sub$sample, drop = FALSE]
+  
+  cor_mat <- cor(counts_sub, method = method)
+  
+  mean(cor_mat[upper.tri(cor_mat)], na.rm = TRUE)
+}
 
 
+outlier_sample <- c("Ins.1837", "Hb.1839")
 
+regions <- unique(coldata$reg)
 
+cor_summary <- tibble(
+  reg = regions,
+  cor_with_outlier = purrr::map_dbl(
+    regions,
+    ~ mean_intra_cor(counts, coldata, .x, method = "spearman")
+  ),
+  cor_without_outlier = purrr::map_dbl(
+    regions,
+    ~ mean_intra_cor(counts, coldata, .x,
+                     exclude_sample = outlier_sample,
+                     method = "spearman")
+  )
+) %>%
+  mutate(
+    delta = cor_without_outlier - cor_with_outlier
+  )
 
-
-
-raw_counts <- read_csv("/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/CPID_sham_vs_cuff_betaprior.csv")
-raw_counts$Geneid <-  str_replace(raw_counts$Geneid, "\\..*", "") 
-"ENSG00000104888" %in% raw_counts
-
-
-
-
-
-
+cor_summary
+# 
