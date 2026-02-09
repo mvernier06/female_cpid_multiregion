@@ -9,7 +9,7 @@ library(ggrepel)
 
 rm(list=ls())
 
-table(coldata$reg,  coldata$timepoint, coldata$group)
+# table(coldata$reg,  coldata$timepoint, coldata$group)
 
 setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
 
@@ -18,6 +18,8 @@ raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_anal
 coldata_path <- "female_cpid_multiregion/data/count_data/coldata.ods"
 plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/"
 # output.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
+
+setwd("/home/marinevernier/projets/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/")
 
 coldata <- read_ods(coldata_path)
 
@@ -84,7 +86,7 @@ ggsave(plot = last_plot(), "PCA_raw_counts_colored_by_region.PNG")
 ggplot(pca_df, aes(x = PC1, y = PC2, color = reg)) +
   geom_point(size = 2) +
   geom_text_repel(
-    data = subset(pca_df, sample == "Ins.1837"),
+    data = subset(pca_df, sample %in% c("Ins.1837", "Hb.1839")),
     aes(label = sample),
     size = 4,
     fontface = "bold"
@@ -100,7 +102,7 @@ ggsave("PCA_raw_counts_colored_by_region_labeled.PNG",
 
 ###############################################################################################
 #### HEAT MAP (fig1)####
-#setwd("/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/")
+
 df <- scale(vst_counts)
 df
 
@@ -330,7 +332,7 @@ pca_df <- as.data.frame(pca_acc$x) %>%
   )
 
 pca_df$timepoint <- as.factor(pca_df$timepoint)
-ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
+ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
   geom_point(size = 3) +
   # geom_text_repel(
   #   size = 3,
@@ -348,7 +350,7 @@ ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
     x = paste0("PC1 (", round(100 * summary(pca_acc)$importance[2,1], 0), "%)"),
     y = paste0("PC2 (", round(100 * summary(pca_acc)$importance[2,2], 0), "%)")
   )
-ggsave(plot=last_plot(), "PCA_Acc_time_point.png")
+ggsave(plot=last_plot(), "PCA_Acc_group.png")
 
 ###
 
