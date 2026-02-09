@@ -13,12 +13,13 @@ setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
 raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
 coldata_path <- "female_cpid_multiregion/data/count_data/coldata.ods"
 plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
-
+coverage.path <- "female_cpid_multiregion/with_positive_control/data/m39_M32_magis/coverage_per_sample.tsv"
 
 
 counts <- read_csv(raw_counts_path)
 coldata <- read_ods(coldata_path)
-
+coverage <- read_tsv(coverage.path)
+coverage$sample <- gsub("-", ".", coverage$sample)
 
 counts_long <- counts %>%
   pivot_longer(
@@ -47,25 +48,58 @@ ggplot(Mog_annot, aes(x = reg, y = expression, label = sample)) +
     y = "Expression"
   )
 
-ggplot(Thy1_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
-  geom_point(size = 3) +
-  geom_text(vjust = -0.5, size = 3) +
-  theme_classic()
-
-grp_annot %>%
-  arrange(expression) %>%
-  mutate(sample_ord = factor(sample, levels = sample)) %>%
-  ggplot(aes(x = sample_ord, y = log2(expression + 1), color = reg)) +
-  geom_point(size = 3) +
-  theme_classic() +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5)
+plots <- list()
+gene="Mog"
+for (gene in genes_present_testes) {
+  
+  counts_gene <- counts_long %>%
+    filter(MGI.symbol == gene)
+  
+  count_cov <- counts_gene %>%
+    left_join(coldata, by = "sample") %>%
+    left_join(coverage, by = "sample") %>%
+    mutate(
+      expression_covnorm = (expression / dedup_bam_reads) * 1e6
+    )
+  
+  plots[[gene]] <- ggplot(
+    count_cov,
+    aes(x = reg, y = expression_covnorm, label = sample)
   ) +
-  labs(
-    x = "Sample",
-    y = "log2(Grp + 1)",
-    color = "Région"
-  )
+    geom_point(size = 3, alpha = 0.8) +
+    geom_text(vjust = -0.5, size = 3) +
+    theme_classic() +
+    labs(
+      title = paste0(gene, " – expression normalisée par la couverture"),
+      x = "Région",
+      y = "CPM (dedup reads)"
+    )
+}
+plots[["Mog"]]
+
+
+
+
+# 
+# ggplot(Thy1_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
+#   geom_point(size = 3) +
+#   geom_text(vjust = -0.5, size = 3) +
+#   theme_classic()
+
+# grp_annot %>%
+#   arrange(expression) %>%
+#   mutate(sample_ord = factor(sample, levels = sample)) %>%
+#   ggplot(aes(x = sample_ord, y = log2(expression + 1), color = reg)) +
+#   geom_point(size = 3) +
+#   theme_classic() +
+#   theme(
+#     axis.text.x = element_text(angle = 90, vjust = 0.5)
+#   ) +
+#   labs(
+#     x = "Sample",
+#     y = "log2(Grp + 1)",
+#     color = "Région"
+#   )
 
 ############################################################################################################
 

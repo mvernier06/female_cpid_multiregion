@@ -6,6 +6,7 @@ library(DESeq2)
 library(corrplot)
 library(readODS)
 library(ggrepel)
+library(umap)
 
 rm(list=ls())
 
@@ -19,12 +20,14 @@ coldata_path <- "female_cpid_multiregion/data/count_data/coldata.ods"
 plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/"
 # output.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
 
-setwd("/home/marinevernier/projets/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/")
 
 coldata <- read_ods(coldata_path)
 
 raw_counts <- read.csv(raw_counts_path) %>%
   column_to_rownames("MGI.symbol")
+
+setwd("/home/marinevernier/projets/cpid_multiregion/female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/")
+
 
 ## normalization because PCA shows distances
 vst_counts <- varianceStabilizingTransformation(as.matrix(raw_counts))
@@ -147,6 +150,7 @@ corrplot(
 )
 legend("topright", legend = names(reg_cols), fill = reg_cols,
        title = "Region", cex = 1.2, bty = "n")
+
 dev.off()
 
 png(file="heatmap_time_points.png", width = 4000, height = 4000, units = "px", res = 100)
@@ -197,7 +201,7 @@ ggsave(plot=t, "tsne_raw_counts.png")
 t$data$sample <- coldata$sample
 t_labeled <- t +
   geom_text_repel(
-    data = subset(t$data, sample == "Ins.1837"),
+    data = subset(t$data, sample %in% c("Ins.1837", "Hb.1839")),
     aes(label = sample),
     size = 4,
     fontface = "bold",
@@ -428,3 +432,82 @@ ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
   )
 ggsave(plot=last_plot(), "PCA_nac_labeled_group.png")
 
+##################################################################################################################
+############################          UMAP              ##########################################
+
+mat <- t(vst_counts)
+
+set.seed(42)
+
+
+umap_res <- umap(
+  mat,
+  n_neighbors = 15,
+  min_dist = 0.1,
+  metric = "euclidean"
+)
+
+df_umap <- data.frame(
+  UMAP1 = umap_res$layout[,1],
+  UMAP2 = umap_res$layout[,2],
+  reg = coldata$reg,
+  sample = coldata$sample
+)
+
+p_umap <- ggplot(df_umap, aes(UMAP1, UMAP2)) +
+  geom_point(aes(color = reg), size = 3) +
+  theme_classic(base_size = 15) +
+  labs(title = "UMAP on VST normalized counts")
+
+p_umap
+
+p_umap_labeled <- p_umap +
+  geom_text_repel(
+    data = subset(df_umap, sample %in% c("Ins.1837", "Hb.1839")),
+    aes(label = sample),
+    size = 4,
+    fontface = "bold",
+    color = "black"
+  )
+
+p_umap_labeled
+
+plots <- list()
+
+for(i in 1:9){
+  
+  set.seed(i)
+  
+  umapi <- umap(
+    mat,
+    n_neighbors = 15,
+    min_dist = 0.1,
+    metric = "euclidean"
+  )
+  
+  df_umap <- data.frame(
+    X1 = umapi$layout[,1],
+    X2 = umapi$layout[,2],
+    sample = coldata$sample,
+    reg = coldata$reg
+  )
+  
+  p <- ggplot(df_umap, aes(X1, X2, color = reg)) +
+    geom_point(size = 3) +
+    # geom_text_repel(
+    #   aes(label = sample %in% c("Ins.1837", "Hb.1839")),
+    #   size = 3,
+    #   max.overlaps = Inf,
+    #   segment.size = 0.3,
+    #   box.padding = 0.4,
+    #   point.padding = 0.3,
+    #   seed = 42
+    # ) +
+    theme_classic(base_size = 15) +
+    labs(title = paste("UMAP run", i, "on VST normalized counts"))
+  
+  plots[[i]] <- p
+}
+
+# wrap_plots(plots, ncol = 3)
+plots[[6]]
