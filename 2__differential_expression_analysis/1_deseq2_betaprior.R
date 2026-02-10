@@ -25,7 +25,7 @@ raw_counts <- raw_counts[, !(colnames(raw_counts) %in% c(
 ))]
 
 rownames(raw_counts) <- raw_counts$Geneid
-raw_counts$Geneid <- NULL
+#raw_counts$Geneid <- NULL
 
 colnames(raw_counts) <- sub(
   "_R2\\.dedup\\.bam$",
