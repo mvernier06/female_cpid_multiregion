@@ -7,31 +7,38 @@ library(DESeq2)
 
 rm(list=ls())
 
-setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
+setwd("/home/marinevernier/Documents/projets/")
 
 #### PATHS ####
 raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-coldata_path <- "female_cpid_multiregion/data/count_data/coldata.ods"
+coldata_path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods"
 plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
-coverage.path <- "female_cpid_multiregion/with_positive_control/data/m39_M32_magis/coverage_per_sample.tsv"
+coverage.path <- "female_cpid_multiregion/data/counts_m39_M32/coverage_per_sample.tsv"
 
 
 counts <- read_csv(raw_counts_path)
 coldata <- read_ods(coldata_path)
 coverage <- read_tsv(coverage.path)
 coverage$sample <- gsub("-", ".", coverage$sample)
+coverage$sample <- sub(
+  "^([A-Za-z]+)([0-9]+)$",
+  "\\1.\\2",
+  coverage$sample
+)
+
 
 counts_long <- counts %>%
   pivot_longer(
-    cols = -MGI.symbol,              
+    cols = -MGI.symbol,
     names_to = "sample",
     values_to = "expression"
   )
 
-genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b", "Mog")
+genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b", "Mog", "Th", "Thy1")
 
 counts <- counts %>% column_to_rownames("MGI.symbol")
-"Mog" %in% rownames(counts)
+"vmat" %in% rownames(counts)
+
 
 Mog <- counts_long %>%
   filter(MGI.symbol == "Mog")
@@ -49,7 +56,7 @@ ggplot(Mog_annot, aes(x = reg, y = expression, label = sample)) +
   )
 
 plots <- list()
-gene="Mog"
+
 for (gene in genes_present_testes) {
   
   counts_gene <- counts_long %>%
@@ -75,44 +82,23 @@ for (gene in genes_present_testes) {
       y = "CPM (dedup reads)"
     )
 }
-plots[["Mog"]]
+plots[["Thy1"]]
 
 
-
-
-# 
-# ggplot(Thy1_annot, aes(x = reg, y = log2(expression + 1), label = sample)) +
-#   geom_point(size = 3) +
-#   geom_text(vjust = -0.5, size = 3) +
-#   theme_classic()
-
-# grp_annot %>%
-#   arrange(expression) %>%
-#   mutate(sample_ord = factor(sample, levels = sample)) %>%
-#   ggplot(aes(x = sample_ord, y = log2(expression + 1), color = reg)) +
-#   geom_point(size = 3) +
-#   theme_classic() +
-#   theme(
-#     axis.text.x = element_text(angle = 90, vjust = 0.5)
-#   ) +
-#   labs(
-#     x = "Sample",
-#     y = "log2(Grp + 1)",
-#     color = "Région"
-#   )
 
 ############################################################################################################
 
 all(colnames(counts) == coldata$sample)
 
 mean_intra_cor <- function(counts, coldata, region,
-                           exclude_sample = NULL,
-                           method = "pearson") {
+                            exclude_sample = NULL,
+                            method = "pearson") {
   
   meta_sub <- coldata %>% filter(reg == region)
   
   if (!is.null(exclude_sample)) {
-    meta_sub <- meta_sub %>% filter(sample != exclude_sample)
+    meta_sub <- meta_sub %>%
+      filter(!sample %in% exclude_sample)
   }
   
   if (nrow(meta_sub) < 3) return(NA_real_)
@@ -123,6 +109,7 @@ mean_intra_cor <- function(counts, coldata, region,
   
   mean(cor_mat[upper.tri(cor_mat)], na.rm = TRUE)
 }
+
 
 
 outlier_sample <- c("Ins.1837", "Hb.1839")
@@ -148,72 +135,3 @@ cor_summary <- tibble(
 
 cor_summary
 
-
-#######################################################################################################################
-########### test coverage #####################
-
-# coldata_path <- "home/cpid_multiregion/data/2__differential_expression_analysis/coldata.csv"
-coverage.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/with_positive_control/data/m39_M32_final/coverage_per_sample_control.tsv"
-
-colnames(coverage)
-
-coverage <- read_tsv(coverage.path)
-coverage$sample <- gsub("-", ".", coverage$sample)
-test_counts <- rownames_to_column(test_counts, "MGI.symbol")
-coldata <- read_csv(coldata_path)
-
-counts_long <- test_counts %>%
-  pivot_longer(
-    cols = -MGI.symbol,              
-    names_to = "sample",
-    values_to = "expression"
-  )
-
-genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b", "Mog")
-
-counts <- test_counts %>% column_to_rownames("MGI.symbol")
-"Mog" %in% rownames(counts)
-
-Mog <- counts_long %>%
-  filter(MGI.symbol == "Mog")
-Mog_annot <- Mog %>%
-  left_join(coldata, by = "sample")
-
-ggplot(Mog_annot, aes(x = reg, y = expression, label = sample)) +
-  geom_point(size = 3, alpha = 0.8) +
-  geom_text(vjust = -0.5, size = 3) +
-  theme_classic() +
-  labs(
-    title = "Mog – détection d'échantillons aberrants",
-    x = "Région",
-    y = "Expression"
-  )
-
-plots <- list()
-gene="Mog"
-for (gene in genes_present_testes) {
-  
-  counts_gene <- counts_long %>%
-    filter(MGI.symbol == gene)
-  
-  count_cov <- counts_gene %>%
-    left_join(coldata, by = "sample") %>%
-    left_join(coverage, by = "sample") %>%
-    mutate(
-      expression_covnorm = (expression / dedup_bam_reads) * 1e6
-    )
-  
-  plots[[gene]] <- ggplot(
-    count_cov,
-    aes(x = reg, y = expression_covnorm, label = sample)
-  ) +
-    geom_point(size = 3, alpha = 0.8) +
-    geom_text(vjust = -0.5, size = 3) +
-    theme_classic() +
-    labs(
-      title = paste0(gene, " – expression normalisée par la couverture"),
-      x = "Région",
-      y = "CPM (dedup reads)"
-    )
-}
-plots[["Mog"]]
