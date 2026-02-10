@@ -147,4 +147,73 @@ cor_summary <- tibble(
   )
 
 cor_summary
-# 
+
+
+#######################################################################################################################
+########### test coverage #####################
+
+# coldata_path <- "home/cpid_multiregion/data/2__differential_expression_analysis/coldata.csv"
+coverage.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/with_positive_control/data/m39_M32_final/coverage_per_sample_control.tsv"
+
+colnames(coverage)
+
+coverage <- read_tsv(coverage.path)
+coverage$sample <- gsub("-", ".", coverage$sample)
+test_counts <- rownames_to_column(test_counts, "MGI.symbol")
+coldata <- read_csv(coldata_path)
+
+counts_long <- test_counts %>%
+  pivot_longer(
+    cols = -MGI.symbol,              
+    names_to = "sample",
+    values_to = "expression"
+  )
+
+genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b", "Mog")
+
+counts <- test_counts %>% column_to_rownames("MGI.symbol")
+"Mog" %in% rownames(counts)
+
+Mog <- counts_long %>%
+  filter(MGI.symbol == "Mog")
+Mog_annot <- Mog %>%
+  left_join(coldata, by = "sample")
+
+ggplot(Mog_annot, aes(x = reg, y = expression, label = sample)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_text(vjust = -0.5, size = 3) +
+  theme_classic() +
+  labs(
+    title = "Mog – détection d'échantillons aberrants",
+    x = "Région",
+    y = "Expression"
+  )
+
+plots <- list()
+gene="Mog"
+for (gene in genes_present_testes) {
+  
+  counts_gene <- counts_long %>%
+    filter(MGI.symbol == gene)
+  
+  count_cov <- counts_gene %>%
+    left_join(coldata, by = "sample") %>%
+    left_join(coverage, by = "sample") %>%
+    mutate(
+      expression_covnorm = (expression / dedup_bam_reads) * 1e6
+    )
+  
+  plots[[gene]] <- ggplot(
+    count_cov,
+    aes(x = reg, y = expression_covnorm, label = sample)
+  ) +
+    geom_point(size = 3, alpha = 0.8) +
+    geom_text(vjust = -0.5, size = 3) +
+    theme_classic() +
+    labs(
+      title = paste0(gene, " – expression normalisée par la couverture"),
+      x = "Région",
+      y = "CPM (dedup reads)"
+    )
+}
+plots[["Mog"]]

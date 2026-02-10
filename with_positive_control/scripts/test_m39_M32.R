@@ -1,14 +1,13 @@
 library(tidyverse)
 library(readODS)
 library(tidyr)
+library(patchwork)
+library(purrr)
 
 rm(list = ls())
-
-setwd("//wsl.localhost/Ubuntu/home/marinevernier/projets/cpid_multiregion/")
-
-
-origine.path <- "/home/marinevernier/projets/cpid_multiregion/cpid_multiregion/data/2__differential_expression_analysis/annotated_counts.csv"
-test.path <- "/home/marinevernier/projets/cpid_multiregion/female_cpid_multiregion/with_positive_control/data/m39_M32_magis/data_2/cpid_multireg_control_counts.txt"
+getwd()
+origine.path <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/annotated_counts.csv"
+test.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/with_positive_control/data/m39_M32_final/cpid_multireg_control_counts.txt"
 
 origine <- read_csv(origine.path)
 test <- read.table(test.path, header = TRUE,
@@ -37,7 +36,7 @@ colnames(test) <- sub(
 colnames(test) <- gsub("-", ".", colnames(test))
 
 ## Annotation 
-annot_table.path <- "female_cpid_multiregion/data/count_data/annotation_final.csv"
+annot_table.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/counts_m39_M32/annotation_final.csv"
 
 # Annotate counts
 test_counts <- test
@@ -174,7 +173,7 @@ table_recap_all
 
 
 filtered_genes <- read.csv(
-  "cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv",
+  "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv",
   stringsAsFactors = FALSE
 )
 
@@ -232,71 +231,204 @@ ggplot(results_filt[[s]]$df_scatter,
     y = "Counts test"
   )
 
-#######################################################################################################################
-########### test coverage #####################
 
-coldata_path <- "cpid_multiregion/data/2__differential_expression_analysis/coldata.csv"
-coverage.path <- "female_cpid_multiregion/with_positive_control/data/m39_M32_magis/coverage_per_sample.tsv"
+####################################################################################################################
+################### Ploter les delta (différence d'expression entre origine et test) pour les 2 échantillons (voir si l'erreur est cohérente entre les samples)
 
+df_origine <- origine_filt
+df_test <- test_counts_filt
+
+
+#df_test <- df_test %>% select(-rowname) 
+
+df_compare_Ins_1787 <- full_join(
+  df_origine %>% select(MGI.symbol, origine = 5),
+  df_test %>% select(MGI.symbol, test = 5),
+  by = "MGI.symbol"
+) %>%
+  mutate(diff = test - origine)
+
+df_compare_Ins_1788 <- full_join(
+  df_origine %>% select(MGI.symbol, origine = 6),
+  df_test %>% select(MGI.symbol, test = 6),
+  by = "MGI.symbol"
+) %>%
+  mutate(diff = test - origine)
+
+df_delta <- inner_join(
+  df_compare_Ins_1787 %>% select(MGI.symbol, delta_1787 = diff),
+  df_compare_Ins_1788 %>% select(MGI.symbol, delta_1788 = diff),
+  by = "MGI.symbol"
+)
+
+ggplot(df_delta, aes(x = delta_1787, y = delta_1788)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(
+    title = "Comparaison des delta entre origine et test pour Ins1787 et Ins1788",
+    x = "delta 1787",
+    y = "delta 1788"
+  ) +
+  theme_minimal()
+
+# code pour tout comparer d'un coup 
+compare_two_samples <- function(df_origine, df_test, col1, col2) {
+  name1 <- colnames(df_origine)[col1]
+  name2 <- colnames(df_origine)[col2]
+  
+  df_compare_1 <- full_join(
+    df_origine %>% select(MGI.symbol, origine = col1),
+    df_test    %>% select(MGI.symbol, test    = col1),
+    by = "MGI.symbol"
+  ) %>%
+    mutate(delta_1 = test - origine) 
+  
+  df_compare_2 <- full_join(
+    df_origine %>% select(MGI.symbol, origine = col2),
+    df_test    %>% select(MGI.symbol, test    = col2),
+    by = "MGI.symbol"
+  ) %>%
+    mutate(delta_2 = test - origine) 
+  
+  df_delta <- inner_join(df_compare_1, df_compare_2, by = "MGI.symbol")
+  
+  ggplot(df_delta, aes(x = delta_1, y = delta_2)) +
+    geom_point(alpha = 0.5) +
+    geom_abline(intercept = 0, slope = 1,
+                color = "red", linetype = "dashed") +
+    labs(
+      title = paste("Comparaison des delta entre origine et test"), #pour", name1, "et", name2
+      x = paste("delta", name1),
+      y = paste("delta", name2)
+    ) +
+    theme_minimal()
+}
+
+compare_two_samples(df_origine, df_test, 2, 3)
+
+sample_cols <- 2:9
+pairs <- combn(sample_cols, 2, simplify = FALSE)
+
+plots <- purrr::map(
+  pairs,
+  ~ compare_two_samples(df_origine, df_test, .x[1], .x[2])
+)
+
+names(plots) <- purrr::map_chr(
+  pairs,
+  ~ paste0(
+    colnames(df_origine)[.x[1]],
+    "_vs_",
+    colnames(df_origine)[.x[2]]
+  )
+)
+
+plots[[1]]
+show_plots_page <- function(plots, page = 1, n_per_page = 6, ncol = 3) {
+  start <- (page - 1) * n_per_page + 1
+  end   <- min(page * n_per_page, length(plots))
+  
+  wrap_plots(plots[start:end], ncol = ncol)
+}
+show_plots_page(plots, page = 1)
+show_plots_page(plots, page = 2)
+show_plots_page(plots, page = 3)
+show_plots_page(plots, page = 4)
+show_plots_page(plots, page = 5)
+
+
+####################################################################################
+### test avec la couverture 
+coverage.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/with_positive_control/data/m39_M32_final/coverage_per_sample_control.tsv"
 
 coverage <- read_tsv(coverage.path)
 coverage$sample <- gsub("-", ".", coverage$sample)
-test_counts <- rownames_to_column(test_counts, "MGI.symbol")
-coldata <- read_csv(coldata_path)
-
-counts_long <- test_counts %>%
-  pivot_longer(
-    cols = -MGI.symbol,              
-    names_to = "sample",
-    values_to = "expression"
+  
+compute_slope_pair <- function(df_origine, df_test, col1, col2) {
+  name1 <- colnames(df_origine)[col1]
+  name2 <- colnames(df_origine)[col2]
+  
+  df1 <- full_join(
+    df_origine %>% select(MGI.symbol, origine = col1),
+    df_test %>% select(MGI.symbol, test = col1),
+    by = "MGI.symbol"
+  ) %>% mutate(delta_1 = test - origine) %>% select(MGI.symbol, delta_1)
+  
+  df2 <- full_join(
+    df_origine %>% select(MGI.symbol, origine = col2),
+    df_test %>% select(MGI.symbol, test = col2),
+    by = "MGI.symbol"
+  ) %>% mutate(delta_2 = test - origine) %>% select(MGI.symbol, delta_2)
+  
+  df_delta <- inner_join(df1, df2, by = "MGI.symbol") %>% drop_na()
+  
+  slope <- coef(lm(delta_2 ~ delta_1, data = df_delta))[2]
+  
+  tibble(
+    sample1 = name1,
+    sample2 = name2,
+    slope = slope
   )
-
-genes_present_testes <- c("Grp", "Drd2", "Drd1", "Camk2a", "Camk2b", "Mog")
-
-counts <- test_counts %>% column_to_rownames("MGI.symbol")
-"Mog" %in% rownames(counts)
-
-Mog <- counts_long %>%
-  filter(MGI.symbol == "Mog")
-Mog_annot <- Mog %>%
-  left_join(coldata, by = "sample")
-
-ggplot(Mog_annot, aes(x = reg, y = expression, label = sample)) +
-  geom_point(size = 3, alpha = 0.8) +
-  geom_text(vjust = -0.5, size = 3) +
-  theme_classic() +
-  labs(
-    title = "Mog – détection d'échantillons aberrants",
-    x = "Région",
-    y = "Expression"
-  )
-
-plots <- list()
-gene="Mog"
-for (gene in genes_present_testes) {
-  
-  counts_gene <- counts_long %>%
-    filter(MGI.symbol == gene)
-  
-  count_cov <- counts_gene %>%
-    left_join(coldata, by = "sample") %>%
-    left_join(coverage, by = "sample") %>%
-    mutate(
-      expression_covnorm = (expression / dedup_bam_reads) * 1e6
-    )
-  
-  plots[[gene]] <- ggplot(
-    count_cov,
-    aes(x = reg, y = expression_covnorm, label = sample)
-  ) +
-    geom_point(size = 3, alpha = 0.8) +
-    geom_text(vjust = -0.5, size = 3) +
-    theme_classic() +
-    labs(
-      title = paste0(gene, " – expression normalisée par la couverture"),
-      x = "Région",
-      y = "CPM (dedup reads)"
-    )
 }
-plots[["Mog"]]
+
+sample_cols <- 2:9
+pairs <- combn(sample_cols, 2, simplify = FALSE)
+
+slopes <- purrr::map_dfr(
+  pairs,
+  ~ compute_slope_pair(df_origine, df_test, .x[1], .x[2])
+)
+
+slopes_cov <- slopes %>%
+  left_join(coverage %>% select(sample, dedup_bam_reads),
+            by = c("sample1" = "sample")) %>%
+  rename(coverage1 = dedup_bam_reads) %>%
+  left_join(coverage %>% select(sample, dedup_bam_reads),
+            by = c("sample2" = "sample")) %>%
+  rename(coverage2 = dedup_bam_reads) %>%
+  mutate(
+    coverage_diff = coverage2 - coverage1,
+    coverage_ratio = coverage2 / coverage1  
+  )
+
+
+lm_slope <- lm(slope ~ coverage_ratio, data = slopes_cov)
+summary(lm_slope)
+
+ggplot(slopes_cov, aes(x = log2(coverage_ratio), y = slope)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(
+    title = "Effet de la couverture relative sur la pente des deltas",
+    x = "log2(couverture_sample2 / couverture_sample1)",
+    y = "pente delta2 ~ delta1"
+  ) +
+  theme_minimal()
+
+lm_summary <- summary(lm_slope)
+
+coef_beta1 <- round(lm_summary$coefficients["coverage_ratio", "Estimate"], 2)
+pval <- signif(lm_summary$coefficients["coverage_ratio", "Pr(>|t|)"], 3)
+r2 <- round(lm_summary$r.squared, 2)
+
+# Ajouter sur le plot
+ggplot(slopes_cov, aes(x = log2(coverage_ratio), y = slope)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(
+    title = "Effet de la couverture relative sur la pente des deltas",
+    x = "log2(couverture_sample2 / couverture_sample1)",
+    y = "pente delta2 ~ delta1"
+  ) +
+  theme_minimal() +
+  annotate(
+    "text", 
+    x = min(log2(slopes_cov$coverage_ratio), na.rm = TRUE), 
+    y = max(slopes_cov$slope, na.rm = TRUE), 
+    label = paste0("Slope = ", coef_beta1,
+                   "\nR² = ", r2,
+                   "\nP-value = ", pval),
+    hjust = 0, vjust = 1,
+    size = 4, color = "darkred"
+  )
 
