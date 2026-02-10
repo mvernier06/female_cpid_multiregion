@@ -6,6 +6,13 @@ library(DESeq2)
 library(corrplot)
 library(readODS)
 
+install.packages("nloptr", repos = "https://cloud.r-project.org")
+install.packages("lme4", repos = "https://cloud.r-project.org")
+install.packages("pbkrtest", repos = "https://cloud.r-project.org")
+install.packages("car", repos = "https://cloud.r-project.org")
+install.packages("FactoMineR", repos = "https://cloud.r-project.org")
+
+
 rm(list=ls())
 
 counts_female <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
