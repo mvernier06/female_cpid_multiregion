@@ -1,13 +1,14 @@
 library(tidyverse)
 
-regionlist <- c("ACC", "Hb", "Ins", "Nac")
+setwd("/home/marinevernier/Documents/projets/")
 
 #### PATHS ####
-annotated_counts.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts.rds"
-output.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/"
+annotated_counts.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts.csv"
+output.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/"
 
-annotated_counts <- read_rds(annotated_counts.path)
-
+annotated_counts <- read_csv(annotated_counts.path)
+regionlist <- c("ACC", "Hb", "Ins", "Nac")
+annotated_counts$Geneid <- NULL
 
 
 #### low quality filtering ####
