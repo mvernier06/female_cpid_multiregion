@@ -6,11 +6,12 @@ library(readODS)
 
 rm(list=ls())
 
+setwd("/home/marinevernier/Documents/projets/")
 
 #### PATHS ####
-raw_counts.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/count_data/cpid_multireg_females_counts.txt"
-coldata.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/count_data/coldata.ods"
-output.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/CPID_sham_vs_cuff_betaprior.csv" # file to save results
+raw_counts.path <- "female_cpid_multiregion/data/counts_m39_M32/cpid_multireg_counts.txt"
+coldata.path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods"
+output.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/CPID_sham_vs_cuff_betaprior.csv" # file to save results
 
 #### Formatting raw counts ####
 raw_counts <- read.table(raw_counts.path, header = TRUE,
@@ -24,7 +25,7 @@ raw_counts <- raw_counts[, !(colnames(raw_counts) %in% c(
 ))]
 
 rownames(raw_counts) <- raw_counts$Geneid
-#raw_counts <- raw_counts[, -1]
+raw_counts$Geneid <- NULL
 
 colnames(raw_counts) <- sub(
   "_R2\\.dedup\\.bam$",
