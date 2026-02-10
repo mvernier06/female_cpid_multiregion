@@ -1,9 +1,11 @@
 library(tidyverse)
 
+setwd("/home/marinevernier/Documents/projets/")
+
 # PATHS ####
-counts.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/CPID_sham_vs_cuff_betaprior.csv"
-annot_table.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/count_data/annotation_final.csv"
-output.path <- "~/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts.csv" # where to save results
+counts.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/CPID_sham_vs_cuff_betaprior.csv"
+annot_table.path <- "female_cpid_multiregion/data/counts_m39_M32/annotation_final.csv"
+output.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts.csv" # where to save results
 
 # Annotate counts
 counts <- read.csv(counts.path)
