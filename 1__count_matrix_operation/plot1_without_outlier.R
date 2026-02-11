@@ -147,15 +147,15 @@ label_colors <- reg_cols[anno$reg]
 corrplot(
   cor_matrix,
   method = "color",
-  col.lim = c(0,1),
+  col.lim = c(0.3,1),
   col = COL2('RdBu', 200),
   is.corr = FALSE,
   tl.col = label_colors,
-  tl.cex = 0.3,        # taille texte
+  tl.cex = 0.8,        # taille texte
   tl.srt = 90          # rotation
 )
 legend("topright", legend = names(reg_cols), fill = reg_cols,
-       title = "Region", cex = 1.2, bty = "n")
+       title = "Region", cex = 3, bty = "n")
 
 dev.off()
 
