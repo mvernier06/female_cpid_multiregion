@@ -90,7 +90,7 @@ ggsave(plot = last_plot(), "PCA_raw_counts_colored_by_region.PNG")
 ggplot(pca_df, aes(x = PC1, y = PC2, color = reg)) +
   geom_point(size = 2) +
   geom_text_repel(
-    data = subset(pca_df, sample %in% c("Ins.1837", "Hb.1839")),
+    data = subset(pca_df, sample %in% c("Ins.1837", "Hb.1839", "Hb.2049")),
     aes(label = sample),
     size = 4,
     fontface = "bold"

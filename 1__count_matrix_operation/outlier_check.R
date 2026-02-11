@@ -135,3 +135,79 @@ cor_summary <- tibble(
 
 cor_summary
 
+
+#################################################################################################################
+
+outliers <- c("Ins.1837", "Hb.1839", "Hb.2049")
+
+lib_df <- tibble(
+  sample = names(lib_size),
+  total_counts = lib_size
+) %>%
+  left_join(coldata, by = "sample") %>%
+  mutate(
+    is_outlier = sample %in% outliers
+  )
+
+ggplot(lib_df,
+       aes(x = reorder(sample, total_counts),
+           y = total_counts,
+           fill = is_outlier)) +
+  geom_col(width = 0.7) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c("FALSE" = "grey70",
+               "TRUE"  = "red3"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Total library size per sample",
+    x = NULL,
+    y = "Total counts"
+  ) +
+  theme_minimal(base_size = 10) +
+  theme(
+    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(size = 8),
+    plot.title  = element_text(size = 11, face = "bold"),
+    panel.grid.major.y = element_blank()
+  )
+
+
+
+
+lib_df_corrected <- tibble(
+  sample = names(lib_size),
+  total_counts = lib_size
+) %>%
+  left_join(coldata, by = "sample") %>%
+  left_join(coverage, by = "sample") %>%
+  mutate(
+    is_outlier = sample %in% outliers,
+    counts_corrected = (total_counts/dedup_bam_reads)*1e6
+  )
+
+ggplot(lib_df_corrected,
+       aes(x = reorder(sample, counts_corrected),
+           y = counts_corrected,
+           fill = is_outlier)) +
+  geom_col(width = 0.7) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c("FALSE" = "grey70",
+               "TRUE"  = "red3"),
+    guide = "none"
+  ) +
+  labs(
+    title = "Total library size per sample, correted by coverage",
+    x = NULL,
+    y = "Total counts corrected by coverage"
+  ) +
+  theme_minimal(base_size = 10) +
+  theme(
+    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(size = 8),
+    plot.title  = element_text(size = 11, face = "bold"),
+    panel.grid.major.y = element_blank()
+  )
+  
