@@ -16,6 +16,7 @@ ens2symbol <- ens2symbol %>% dplyr::select(!X)
 
 annotated_counts <- inner_join(counts, ens2symbol, by=c("Geneid"="Gene.stable.ID"))
 annotated_counts <- annotated_counts %>% relocate(MGI.symbol, .before=Geneid) 
+
 # remove duplicates to avoid alluvial errors (ex: pattern ns_ns_ns)
 annotated_counts <- annotated_counts[!duplicated(annotated_counts$MGI.symbol),]
 
