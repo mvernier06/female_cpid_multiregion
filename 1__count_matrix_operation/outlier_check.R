@@ -6,6 +6,10 @@ library(ggplot2)
 library(DESeq2)
 library(ggrepel)
 library(M3C)
+library(apeglm)
+library(pheatmap)
+library(dplyr)
+library(tidyr)
 
 rm(list=ls())
 
@@ -244,3 +248,88 @@ ggplot(df,
        y = "total counts"
      ) 
 ggsave(plot=last_plot(), "total_counts_vs_number_reads.png")
+
+
+##################################################################################################
+#### Differential expression analysis of sham vs cuff ####
+
+setwd("ACC_vs_other")
+
+counts <- read_csv(raw_counts_path) %>%
+  column_to_rownames("MGI.symbol") %>%
+  as.data.frame()
+coldata <- read_ods(coldata_path)
+coverage <- read_tsv(coverage.path)
+coverage$sample <- gsub("-", ".", coverage$sample)
+coverage$sample <- sub(
+  "^([A-Za-z]+)([0-9]+)$",
+  "\\1.\\2",
+  coverage$sample
+)
+
+coldata$region <- ifelse(coldata$reg == "ACC", "ACC", "Other")
+coldata$region <- factor(coldata$region, levels = c("Other", "ACC"))
+
+dds <- DESeqDataSetFromMatrix(
+  countData = counts,
+  colData = coldata,
+  design = ~ region
+)
+
+dds <- DESeq(dds)
+
+res <- results(dds, contrast = c("region", "ACC", "Other"))
+res <- lfcShrink(dds, coef="region_ACC_vs_Other", type="apeglm")
+
+res_df <- as.data.frame(res) %>%
+  tibble::rownames_to_column("gene")
+
+
+top_genes <- res_df %>%
+  filter(!is.na(padj),
+         padj < 0.05,
+         log2FoldChange > 1 )%>%
+  arrange(desc(abs(log2FoldChange))) %>%
+  slice_head(n = 10) %>%
+  pull(gene)
+
+top_genes
+
+
+plots <- list()
+
+for (gene in top_genes) {
+  
+  counts_gene <- counts_long %>%
+    filter(MGI.symbol == gene)
+  
+  count_cov <- counts_gene %>%
+    left_join(coldata, by = "sample") %>%
+    left_join(coverage, by = "sample") %>%
+    mutate(
+      expression_covnorm = (expression / dedup_bam_reads) * 1e6
+    )
+  
+  
+  p<- ggplot(
+    count_cov,
+    aes(x = reg, y = expression_covnorm, label = sample)
+  ) +
+    geom_point(size = 3, alpha = 0.8) +
+    geom_text(vjust = -0.5, size = 3) +
+    theme_classic() +
+    labs(
+      title = paste0(gene, " – expression normalisée par la couverture"),
+      x = "Région",
+      y = "CPM (dedup reads)"
+    )
+  plots[[gene]] <- p
+  filename <- paste0(gene, "_expression.png")
+  ggsave(plot=last_plot(), filename)
+}
+top_genes
+plots[["Mylk3"]]
+
+
+
+
