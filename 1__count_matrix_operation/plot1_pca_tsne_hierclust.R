@@ -18,7 +18,7 @@ setwd("/home/marinevernier/Documents/projets/")
 
 #### PATHS ####
 raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-coldata_path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods"
+coldata_path <- "female_cpid_multiregion/data/counts_m39_M32/coldata_without_outliers.ods"
 plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/"
 output.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
 
@@ -90,7 +90,7 @@ ggsave(plot = last_plot(), "PCA_raw_counts_colored_by_region.PNG")
 ggplot(pca_df, aes(x = PC1, y = PC2, color = reg)) +
   geom_point(size = 2) +
   geom_text_repel(
-    data = subset(pca_df, sample %in% c("Ins.1837", "Hb.1839", "Hb.2049")),
+    data = subset(pca_df, sample %in% c("Hb.2075", "Hb.2076", "Hb.1846")),
     aes(label = sample),
     size = 4,
     fontface = "bold"
@@ -106,7 +106,7 @@ ggsave("PCA_raw_counts_colored_by_region_labeled.PNG",
 
 ###############################################################################################
 #### HEAT MAP (fig1)####
-setwd(output.path)
+setwd("..")
 
 df <- scale(vst_counts)
 df
@@ -147,11 +147,11 @@ corrplot(
   col = COL2('RdBu', 200),
   is.corr = FALSE,
   tl.col = label_colors,
-  tl.cex = 0.3,        # taille texte
+  tl.cex = 0.7,        # taille texte attention en fonction de l'affichaque R vs le png ca change 
   tl.srt = 90          # rotation
 )
 legend("topright", legend = names(reg_cols), fill = reg_cols,
-       title = "Region", cex = 1.2, bty = "n")
+       title = "Region", cex = 3, bty = "n")
 
 dev.off()
 
@@ -164,12 +164,12 @@ corrplot(
   col = COL2('RdBu', 200),
   is.corr = FALSE,
   tl.col = label_colors,
-  tl.cex = 0.6,        # taille texte
+  tl.cex = 0.7,        # taille texte
   tl.srt = 90          # rotation
 )
 
 legend("topright", legend = names(tp_cols), fill = tp_cols,
-       title = "Time points", cex = 1.2, bty = "n")
+       title = "Time points", cex = 3, bty = "n")
 dev.off()
 
 png(file="heatmap_group.png", width = 4000, height = 4000, units = "px", res = 100)
@@ -181,32 +181,32 @@ corrplot(
   col = COL2('RdBu', 200),
   is.corr = FALSE,
   tl.col = label_colors,
-  tl.cex = 0.6,        # taille texte
+  tl.cex = 0.7,        # taille texte
   tl.srt = 90          # rotation
 )
 
 legend("bottomright", legend = names(group_cols), fill = group_cols,
-       title = "Group", cex = 1.2, bty = "n")
+       title = "Group", cex = 3, bty = "n")
 dev.off()
 
 #################################################################
 #### T-SNE ON RAW COUNTS ####
 vst_counts
-setwd("..")
+# setwd("..")
 
-set.seed(123)
+set.seed(15)
 t <- tsne(vst_counts, labels=coldata$reg, legendtextsize = 15,axistextsize = 15,dotsize=3,
           colvec = "black") +
   labs( title="T-sne on VST normalized counts")
 t
 ggsave(plot=t, "tsne_raw_counts.png")
-?tsne
+
 t$data$sample <- coldata$sample
 t_labeled <- t +
   geom_text_repel(
-    data = subset(t$data, sample %in% c("Ins.1837", "Hb.1839", "Hb.2049")),
+    data = subset(t$data, sample %in% c("Ins.1851", "Nac.2075", "Nac.2043")),
     aes(label = sample),
-    size = 4,
+    size = 3,
     fontface = "bold",
     color = "black"
   )
@@ -220,7 +220,7 @@ t_labeled_all <- t +
   geom_text_repel(
     data = t$data,
     aes(label = sample),
-    size = 3,           # taille réduite pour 163 samples
+    size = 3,          
     max.overlaps = Inf, # permet de forcer l'affichage de tous
     segment.size = 0.3  # petite ligne de liaison
   )
@@ -258,11 +258,11 @@ for(i in 1:9){
       point.padding = 0.3,   # espace autour du point
       seed = 42              # positions reproductibles
     )
-  
-  plots[[i]] <- t_labeled_all
+
+  plots[[i]] <- ti
 }
 
-wrap_plots(plots, ncol = 3)
+# wrap_plots(plots, ncol = 3)
 plots[[9]]
 
 ###################################################################################################################
@@ -286,25 +286,25 @@ pca_df <- as.data.frame(pca_ins$x) %>%
   )
 
 pca_df$timepoint <- as.factor(pca_df$timepoint)
-ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
+ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
   geom_point(size = 3) +
-  # geom_text_repel(
-  #   size = 3,
-  #   max.overlaps = Inf,
-  #   show.legend = FALSE
-  # ) +
   geom_text_repel(
-    data = subset(pca_df, sample == "Ins.1837"),
-    aes(label = sample),
-    size = 3
-  )+
+    size = 3,
+    max.overlaps = Inf,
+    show.legend = FALSE
+  ) +
+  # geom_text_repel(
+  #   data = pca_df,
+  #   aes(label = sample),
+  #   size = 3
+  # )+
   theme_classic() +
   labs(
     title = "PCA intra-région Ins",
     x = paste0("PC1 (", round(100 * summary(pca_ins)$importance[2,1], 0), "%)"),
     y = paste0("PC2 (", round(100 * summary(pca_ins)$importance[2,2], 0), "%)")
   )
-ggsave(plot=last_plot(), "PCA_Ins_labeled_timepoint.png")
+ggsave(plot=last_plot(), "PCA_Ins_labeled_group.png")
 
 ##
 
@@ -324,7 +324,7 @@ pca_df <- as.data.frame(pca_acc$x) %>%
   )
 
 pca_df$timepoint <- as.factor(pca_df$timepoint)
-ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
+ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
   geom_point(size = 3) +
   # geom_text_repel(
   #   size = 3,
@@ -342,7 +342,7 @@ ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
     x = paste0("PC1 (", round(100 * summary(pca_acc)$importance[2,1], 0), "%)"),
     y = paste0("PC2 (", round(100 * summary(pca_acc)$importance[2,2], 0), "%)")
   )
-ggsave(plot=last_plot(), "PCA_Acc_time_point.png")
+ggsave(plot=last_plot(), "PCA_Acc_group.png")
 
 ###
 
@@ -362,7 +362,7 @@ pca_df <- as.data.frame(pca_Hb$x) %>%
   )
 
 pca_df$timepoint <- as.factor(pca_df$timepoint)
-ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
+ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
   geom_point(size = 3) +
   geom_text_repel(
     size = 3,
@@ -380,7 +380,7 @@ ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
     x = paste0("PC1 (", round(100 * summary(pca_Hb)$importance[2,1], 0), "%)"),
     y = paste0("PC2 (", round(100 * summary(pca_Hb)$importance[2,2], 0), "%)")
   )
-ggsave(plot=last_plot(), "PCA_Hb_labeled_time_point.png")
+ggsave(plot=last_plot(), "PCA_Hb_labeled_group.png")
 
 ##
 
@@ -400,34 +400,33 @@ pca_df <- as.data.frame(pca_nac$x) %>%
   )
 
 pca_df$timepoint <- as.factor(pca_df$timepoint)
-ggplot(pca_df, aes(PC1, PC2, color = timepoint, label = sample)) +
+ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
   geom_point(size = 3) +
   # geom_text_repel(
   #   size = 3,
   #   max.overlaps = Inf,
   #   show.legend = FALSE
   # ) +
-  geom_text_repel(
-    data = subset(pca_df, sample == "Nac.1837"),
-    aes(label = sample),
-    size = 3
-  )+
+  # geom_text_repel(
+  #   data = subset(pca_df, sample == "Nac.1837"),
+  #   aes(label = sample),
+  #   size = 3
+  # )+
   theme_classic() +
   labs(
     title = "PCA intra-région Nac",
     x = paste0("PC1 (", round(100 * summary(pca_nac)$importance[2,1], 0), "%)"),
     y = paste0("PC2 (", round(100 * summary(pca_nac)$importance[2,2], 0), "%)")
   )
-ggsave(plot=last_plot(), "PCA_nac_labeled_time_point.png")
+ggsave(plot=last_plot(), "PCA_nac_group.png")
 
 ##################################################################################################################
 ############################          UMAP              ##########################################
-setwd("../..")
+# setwd("../..")
 
 mat <- t(vst_counts)
 
 set.seed(42)
-
 
 umap_res <- umap(
   mat,
@@ -450,16 +449,16 @@ p_umap <- ggplot(df_umap, aes(UMAP1, UMAP2)) +
 
 p_umap
 
-p_umap_labeled <- p_umap +
-  geom_text_repel(
-    data = subset(df_umap, sample %in% c("Ins.1837", "Hb.1839", "Hb.2049")),
-    aes(label = sample),
-    size = 4,
-    fontface = "bold",
-    color = "black"
-  )
-
-p_umap_labeled
+# p_umap_labeled <- p_umap +
+#   geom_text_repel(
+#     data = subset(df_umap, sample %in% c("Ins.1837", "Hb.1839", "Hb.2049")),
+#     aes(label = sample),
+#     size = 4,
+#     fontface = "bold",
+#     color = "black"
+#   )
+# 
+# p_umap_labeled
 ggsave(plot=last_plot(), "umap_vst_counts_labelled_region.png")
 
 plots <- list()
@@ -484,15 +483,15 @@ for(i in 1:9){
   
   p <- ggplot(df_umap, aes(X1, X2, color = reg)) +
     geom_point(size = 3) +
-    geom_text_repel(
-      aes(label = sample ), # %in% c("Ins.1837", "Hb.1839")
-      size = 3,
-      max.overlaps = Inf,
-      segment.size = 0.3,
-      box.padding = 0.4,
-      point.padding = 0.3,
-      seed = 42
-    ) +
+    # geom_text_repel(
+    #   aes(label = sample ), # %in% c("Ins.1837", "Hb.1839")
+    #   size = 3,
+    #   max.overlaps = Inf,
+    #   segment.size = 0.3,
+    #   box.padding = 0.4,
+    #   point.padding = 0.3,
+    #   seed = 42
+    # ) +
     theme_classic(base_size = 15) +
     labs(title = paste("UMAP run", i, "on VST normalized counts"))
   
