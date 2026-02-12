@@ -93,8 +93,9 @@ Deseq2MultiReg <- function(regionList, tpList){
       raw_counts <- cbind(raw_counts, res_tp)
     }
   }
-  
-  write.csv(raw_counts, output.path, row.names=FALSE)
+  raw_counts_out <- cbind(Geneid = rownames(raw_counts), raw_counts)
+  write.csv(raw_counts_out, output.path, row.names = FALSE)
+
 }
 
 #### Call to the function ####
