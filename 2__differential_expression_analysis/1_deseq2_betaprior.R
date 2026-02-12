@@ -25,7 +25,7 @@ raw_counts <- raw_counts[, !(colnames(raw_counts) %in% c(
 ))]
 
 rownames(raw_counts) <- raw_counts$Geneid
-#raw_counts$Geneid <- NULL
+raw_counts$Geneid <- NULL
 
 colnames(raw_counts) <- sub(
   "_R2\\.dedup\\.bam$",
@@ -50,6 +50,12 @@ coldata <- coldata %>% arrange(by = sample)
 coldata %>% filter(timepoint == 1) %>% nrow
 
 
+### Excluding outliers ###
+outliers <- c("Ins.1837", "Nac.1837", "Hb.1839", "Hb.2049")
+coldata <- coldata %>%
+  filter(!sample %in% outliers)
+raw_counts <- raw_counts[, coldata$sample, drop = FALSE]
+
 #### Differential expression analysis of sham vs cuff ####
 Deseq2MultiReg <- function(regionList, tpList){
   
@@ -69,7 +75,7 @@ Deseq2MultiReg <- function(regionList, tpList){
       # Compute pval, qval and lfc related to the difference of sham vs cuff for each timepoint per region
       dds <- DESeqDataSetFromMatrix(countData=df[, grepl(region, names(df))], 
                                     colData=metadata[str_detect(metadata$reg, region),], 
-                                    design=~group)
+                                    design=~ RIN + group)
       
       dds <- DESeq(object = dds, betaPrior = TRUE)
       
