@@ -5,6 +5,7 @@ library(readODS)
 library(ggplot2)
 library(DESeq2)
 library(ggrepel)
+library(M3C)
 
 rm(list=ls())
 
@@ -243,13 +244,3 @@ ggplot(df,
        y = "total counts"
      ) 
 ggsave(plot=last_plot(), "total_counts_vs_number_reads.png")
-
-#########################################################################################################
-###################  test avec le RIN ##################
-
-
-
-
-
-
-
