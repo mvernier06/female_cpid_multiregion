@@ -289,7 +289,7 @@ top_genes <- res_df %>%
   filter(!is.na(padj),
          padj < 0.05,
          log2FoldChange > 1 )%>%
-  arrange(desc(abs(log2FoldChange))) %>%
+  arrange(desc(log2FoldChange)) %>%
   slice_head(n = 10) %>%
   pull(gene)
 
