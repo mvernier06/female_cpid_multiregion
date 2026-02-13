@@ -1,5 +1,3 @@
-## Attention, faut restart R avant de charger les librairies ##
-
 library(tidyverse)
 library(ggplot2)
 library(ggalluvial)
@@ -7,10 +5,10 @@ library(ggalluvial)
 rm(list=ls())
 
 #### PATHS ####
-deglist.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
-tempcountlist.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/tempcountlist.Rdata"
-plot.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/alluvial"
-output.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/"
+deglist.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
+tempcountlist.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/tempcountlist.Rdata"
+plot.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/alluvial"
+output.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/"
 
 dir.create(plot.path)
 load(deglist.path)
