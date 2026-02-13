@@ -17,6 +17,8 @@ setwd(plot.path)
 regionlist <- c("ACC", "Hb", "Ins", "Nac")
 tplist <- c("tp1", "tp2", "tp3")
 
+plot <- list()
+i=1
 # volcano plots for each tp of every reg
 for(reg in regionlist){
   for(tp in tplist){
@@ -50,6 +52,7 @@ for(reg in regionlist){
       labs(title=paste0("DEGs of ", reg, " at ", tp),
            x="log2 (Fold Change)", y="-log10 (p-value)",
            colour="DEG")
+    plot[i] <- p
     plot.filename <- paste0("deg_volcano_", reg,"_" ,tp, ".png")
     ggsave(plot=p, filename=plot.filename, bg="white", width=1900, height=1200, units="px", scale=2)
     
@@ -59,8 +62,11 @@ for(reg in regionlist){
       na.omit() %>%
       arrange(pval)
     assign(paste0("deg_", reg, "_", tp), deg, envir = .GlobalEnv)
+    i = i+1
   }
 }
+
+plot[13]
 
 # save degs
 setwd(output.path)
