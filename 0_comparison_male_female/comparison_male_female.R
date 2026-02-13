@@ -6,20 +6,14 @@ library(DESeq2)
 library(corrplot)
 library(readODS)
 
-install.packages("nloptr", repos = "https://cloud.r-project.org")
-install.packages("lme4", repos = "https://cloud.r-project.org")
-install.packages("pbkrtest", repos = "https://cloud.r-project.org")
-install.packages("car", repos = "https://cloud.r-project.org")
-install.packages("FactoMineR", repos = "https://cloud.r-project.org")
-
 
 rm(list=ls())
 
-counts_female <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-counts_male <- "/home/marinevernier/Documents/cpid_multiregion/cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-coldata_female_path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/count_data/coldata.ods"
-coldata_male_path <- "/home/marinevernier/Documents/cpid_multiregion/cpid_multiregion/data/2__differential_expression_analysis/coldata.csv"
-output_path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/0_comparison_male_female/"
+counts_female <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
+counts_male <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
+coldata_female_path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/count_data/coldata.ods"
+coldata_male_path <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/coldata.csv"
+output_path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/0_comparison_male_female/"
 setwd(output_path)
 
 df_female <- read_csv(counts_female)
