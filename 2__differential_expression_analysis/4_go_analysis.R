@@ -1,21 +1,31 @@
-################# problème de biocmanager, faut R4.3 ####################
+dir.create("~/R/library", showWarnings = FALSE, recursive = TRUE)
+.libPaths(c("~/R/library", .libPaths()))
 
+Sys.setenv(R_COMPILE_AND_INSTALL_PACKAGES = "always") 
 
+# Installer remotes si nécessaire
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
 
+# Installer treeio depuis GitHub (corrige random_ref)
+remotes::install_github("YuLab-SMU/treeio", lib="~/R/library")
+
+# Installer ggtree depuis GitHub (corrige check_linewidth)
+remotes::install_github("YuLab-SMU/ggtree", lib="~/R/library")
+
+# Installer les autres dépendances de clusterProfiler
+BiocManager::install(c("DOSE","enrichplot","clusterProfiler"), lib="~/R/library", ask=FALSE)
 
 
 library(clusterProfiler)
 library(tidyverse)
 
-BiocManager::install("clusterProfiler")
-BiocManager::install("ggtree")
-
 rm(list=ls())
 
+setwd("/home/marinevernier/Documents/projets/")
 #### PATH ####
-annotated_counts.path <- "~/CPID_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
-deglist.path <- "~/CPID_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
-output.path <- "~/CPID_multiregion/data/2__differential_expression_analysis/"
+annotated_counts.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
+deglist.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
+output.path <- "female_cpid_multiregion/data/2__differential_expression_analysis/"
 organism = "org.Mm.eg.db"
 library(organism, character.only = TRUE)
 
@@ -23,7 +33,7 @@ load(deglist.path)
 counts <- readRDS(annotated_counts.path)
 counts
 
-regionList <- c("BLA", "DRN", "Hb", "Ins", "NAc", "VTA")
+regionList <- c("ACC", "Ins", "Hb", "Nac")
 tpList <- c("1", "2", "3")
 
 # over-representation of DEGs vs background (hypergeometric)
@@ -56,24 +66,24 @@ setwd(output.path)
 save(list=go_obj, file="go_obj.Rdata")
 
 load(paste0(output.path, "go_obj.Rdata"))
-nrow(go_DRN_1)
+nrow(go_ACC_1)
 for(reg in regionList){
   for(tp in tpList){
     go_obj <- paste("go", reg, tp, sep="_")
     print(paste0(reg, " tp", tp, ": ",nrow(get(go_obj))))
   }
 }
-# => Ins tp1+3 n'ont pas d'enrichissement GO
+
 # TESTER SANS BACKGROUND PERSO
-view(go_DRN_3)
+view(go_Nac_1)
 # test:
 counts_temp <- counts %>% 
-  dplyr::select(MGI.symbol, contains("Ins") & contains("1") & !contains("padj")) %>% 
+  dplyr::select(MGI.symbol, contains("Acc") & contains("2") & !contains("padj")) %>% 
   na.omit
 
 deg_regtp <- get(paste0("deg_", reg, "_tp", tp))
 
-go_test_Ins_1 <- enrichGO(gene = deg_regtp$label, 
+go_test_Acc_2 <- enrichGO(gene = deg_regtp$label, 
                           OrgDb = organism, 
                           keyType = "SYMBOL", 
                           ont ="BP", 
@@ -82,7 +92,7 @@ go_test_Ins_1 <- enrichGO(gene = deg_regtp$label,
                           pAdjustMethod = "BH",
                           universe = counts_temp$MGI.symbol)
 
-go_test_Ins_1_wt_background <- enrichGO(gene = deg_regtp$label, 
+go_test_Acc_2_wt_background <- enrichGO(gene = deg_regtp$label, 
                                         OrgDb = organism, 
                                         keyType = "SYMBOL", 
                                         ont ="BP", 
@@ -90,7 +100,7 @@ go_test_Ins_1_wt_background <- enrichGO(gene = deg_regtp$label,
                                         qvalueCutoff = 0.2,
                                         pAdjustMethod = "BH")
 
-go_test_Ins_1_wt_pval_cutoff <- enrichGO(gene = deg_regtp$label, 
+go_test_Acc_2_wt_pval_cutoff <- enrichGO(gene = deg_regtp$label, 
                                          OrgDb = organism, 
                                          keyType = "SYMBOL", 
                                          ont ="BP", 
@@ -98,17 +108,17 @@ go_test_Ins_1_wt_pval_cutoff <- enrichGO(gene = deg_regtp$label,
                                          pAdjustMethod = "BH",
                                          universe = counts_temp$MGI.symbol)
 
-go_test_Ins_1_wt_background_and_pval_cutoff <- enrichGO(gene = deg_regtp$label, 
+go_test_Acc_2_wt_background_and_pval_cutoff <- enrichGO(gene = deg_regtp$label, 
                                                         OrgDb = organism, 
                                                         keyType = "SYMBOL", 
                                                         ont ="BP", 
                                                         pvalueCutoff = 0.05,
                                                         pAdjustMethod = "BH")
 
-nrow(go_test_Ins_1)
-nrow(go_test_Ins_1_wt_background)
-nrow(go_test_Ins_1_wt_pval_cutoff)
-nrow(go_test_Ins_1_wt_background_and_pval_cutoff)
+nrow(go_test_Acc_2)
+nrow(go_test_Acc_2_wt_background)
+nrow(go_test_Acc_2_wt_pval_cutoff)
+nrow(go_test_Acc_2_wt_background_and_pval_cutoff)
 # qval cutoff change rien, on perd le signal en utilisant notre background custom
 # end test
 
@@ -147,7 +157,7 @@ setwd(output.path)
 dir.create("./gse")
 setwd("./gse")
 save(list=gse_obj, file="gse_obj.Rdata")
-load("~/CPID_multiregion/data/2__differential_expression_analysis/gse/gse_obj.Rdata")
+load("gse_obj.Rdata")
 
 for(reg in regionList){
   for(tp in tpList){
@@ -158,50 +168,34 @@ for(reg in regionList){
 
 
 #### intersect gsea ####
-length(intersect(gse_BLA_1$Description, gse_BLA_2$Description)) # 75   après correction #116
-length(intersect(gse_BLA_2$Description, gse_BLA_3$Description)) # 2  # 3
-length(intersect(gse_BLA_1$Description, gse_BLA_3$Description)) # 2  # 4
-length(intersect(gse_BLA_1$Description, intersect(gse_BLA_2$Description, gse_BLA_3$Description))) # 0
+length(intersect(gse_ACC_1$Description, gse_ACC_2$Description)) 
+length(intersect(gse_ACC_2$Description, gse_ACC_3$Description)) 
+length(intersect(gse_ACC_1$Description, gse_ACC_3$Description))
+length(intersect(gse_ACC_1$Description, intersect(gse_ACC_2$Description, gse_ACC_3$Description)))
 
-length(intersect(gse_DRN_1$Description, gse_DRN_2$Description)) # 64   # 114
-length(intersect(gse_DRN_2$Description, gse_DRN_3$Description)) # 19   # 42
-length(intersect(gse_DRN_1$Description, gse_DRN_3$Description)) # 16   # 50
-length(intersect(gse_DRN_1$Description, intersect(gse_DRN_2$Description, gse_DRN_3$Description))) # 10 # 28
+length(intersect(gse_Hb_1$Description, gse_Hb_2$Description)) 
+length(intersect(gse_Hb_2$Description, gse_Hb_3$Description)) 
+length(intersect(gse_Hb_1$Description, gse_Hb_3$Description)) 
+length(intersect(gse_Hb_1$Description, intersect(gse_Hb_2$Description, gse_Hb_3$Description))) 
 
-length(intersect(gse_Hb_1$Description, gse_Hb_2$Description)) # 60 # 96
-length(intersect(gse_Hb_2$Description, gse_Hb_3$Description)) # 117 # 231
-length(intersect(gse_Hb_1$Description, gse_Hb_3$Description)) # 39 # 66
-length(intersect(gse_Hb_1$Description, intersect(gse_Hb_2$Description, gse_Hb_3$Description))) # 33 # 56
+length(intersect(gse_Ins_1$Description, gse_Ins_2$Description)) 
+length(intersect(gse_Ins_2$Description, gse_Ins_3$Description)) 
+length(intersect(gse_Ins_1$Description, gse_Ins_3$Description)) 
 
-length(intersect(gse_Ins_1$Description, gse_Ins_2$Description)) # 0 
-length(intersect(gse_Ins_2$Description, gse_Ins_3$Description)) # 0
-length(intersect(gse_Ins_1$Description, gse_Ins_3$Description)) # 0 # 1
+length(intersect(gse_Nac_1$Description, gse_Nac_2$Description)) 
+length(intersect(gse_Nac_2$Description, gse_Nac_3$Description)) 
+length(intersect(gse_Nac_1$Description, gse_Nac_3$Description)) 
+length(intersect(gse_Nac_1$Description, intersect(gse_Nac_2$Description, gse_Nac_3$Description))) 
 
-length(intersect(gse_NAc_1$Description, gse_NAc_2$Description)) # 95 # 123
-length(intersect(gse_NAc_2$Description, gse_NAc_3$Description)) # 37 # 58
-length(intersect(gse_NAc_1$Description, gse_NAc_3$Description)) # 7  # 12 
-length(intersect(gse_NAc_1$Description, intersect(gse_NAc_2$Description, gse_NAc_3$Description))) # 6 # 10
 
-length(intersect(gse_VTA_1$Description, gse_VTA_2$Description)) # 51 # 97
-length(intersect(gse_VTA_2$Description, gse_VTA_3$Description)) # 59 # 101
-length(intersect(gse_VTA_1$Description, gse_VTA_3$Description)) # 283 # 394
-length(intersect(gse_VTA_1$Description, intersect(gse_VTA_2$Description, gse_VTA_3$Description))) # 37 # 73
-
-view(gse_BLA_1)
+view(gse_Hb_1)
 # big df with all results
-bla1 <- data.frame(description=gse_BLA_1$Description, bla1_pval=gse_BLA_1$pvalue, bla1_ES=gse_BLA_1$enrichmentScore,
-                   bla1_ranking=sign(gse_BLA_1$enrichmentScore)*-log10(gse_BLA_1$pvalue))
-bla2 <- data.frame(description=gse_BLA_2$Description, bla2_pval=gse_BLA_2$pvalue, bla2_ES=gse_BLA_2$enrichmentScore,
-                   bla2_ranking=sign(gse_BLA_2$enrichmentScore)*-log10(gse_BLA_2$pvalue))
-bla3 <- data.frame(description=gse_BLA_3$Description, bla3_pval=gse_BLA_3$pvalue, bla3_ES=gse_BLA_3$enrichmentScore,
-                   bla3_ranking=sign(gse_BLA_3$enrichmentScore)*-log10(gse_BLA_3$pvalue))
-
-drn1 <- data.frame(description=gse_DRN_1$Description, drn1_pval=gse_DRN_1$pvalue, drn1_ES=gse_DRN_1$enrichmentScore,
-                   drn1_ranking=sign(gse_DRN_1$enrichmentScore)*-log10(gse_DRN_1$pvalue))
-drn2 <- data.frame(description=gse_DRN_2$Description, drn2_pval=gse_DRN_2$pvalue, drn2_ES=gse_DRN_2$enrichmentScore,
-                   drn2_ranking=sign(gse_DRN_2$enrichmentScore)*-log10(gse_DRN_2$pvalue))
-drn3 <- data.frame(description=gse_DRN_3$Description, drn3_pval=gse_DRN_3$pvalue, drn3_ES=gse_DRN_3$enrichmentScore,
-                   drn3_ranking=sign(gse_DRN_3$enrichmentScore)*-log10(gse_DRN_3$pvalue))
+acc1 <- data.frame(description=gse_ACC_1$Description, acc1_pval=gse_ACC_1$pvalue, acc1_ES=gse_ACC_1$enrichmentScore,
+                   acc_ranking=sign(gse_ACC_1$enrichmentScore)*-log10(gse_ACC_1$pvalue))
+acc2 <- data.frame(description=gse_ACC_2$Description, acc2_pval=gse_ACC_2$pvalue, acc2_ES=gse_ACC_2$enrichmentScore,
+                   acc2_ranking=sign(gse_ACC_2$enrichmentScore)*-log10(gse_ACC_2$pvalue))
+acc3 <- data.frame(description=gse_ACC_3$Description, acc3_pval=gse_ACC_3$pvalue, acc3_ES=gse_ACC_3$enrichmentScore,
+                   acc3_ranking=sign(gse_ACC_3$enrichmentScore)*-log10(gse_ACC_3$pvalue))
 
 hb1 <- data.frame(description=gse_Hb_1$Description, hb1_pval=gse_Hb_1$pvalue, hb1_ES=gse_Hb_1$enrichmentScore,
                   hb1_ranking=sign(gse_Hb_1$enrichmentScore)*-log10(gse_Hb_1$pvalue))
@@ -217,26 +211,17 @@ ins2 <- data.frame(description=gse_Ins_2$Description, ins2_pval=gse_Ins_2$pvalue
 ins3 <- data.frame(description=gse_Ins_3$Description, ins3_pval=gse_Ins_3$pvalue, ins3_ES=gse_Ins_3$enrichmentScore,
                    ins3_ranking=sign(gse_Ins_3$enrichmentScore)*-log10(gse_Ins_3$pvalue))
 
-nac1 <- data.frame(description=gse_NAc_1$Description, nac1_pval=gse_NAc_1$pvalue, nac1_ES=gse_NAc_1$enrichmentScore,
-                   nac1_ranking=sign(gse_NAc_1$enrichmentScore)*-log10(gse_NAc_1$pvalue))
-nac2 <- data.frame(description=gse_NAc_2$Description, nac2_pval=gse_NAc_2$pvalue, nac2_ES=gse_NAc_2$enrichmentScore,
-                   nac2_ranking=sign(gse_NAc_2$enrichmentScore)*-log10(gse_NAc_2$pvalue))
-nac3 <- data.frame(description=gse_NAc_3$Description, nac3_pval=gse_NAc_3$pvalue, nac3_ES=gse_NAc_3$enrichmentScore,
-                   nac3_ranking=sign(gse_NAc_3$enrichmentScore)*-log10(gse_NAc_3$pvalue))
+nac1 <- data.frame(description=gse_Nac_1$Description, nac1_pval=gse_Nac_1$pvalue, nac1_ES=gse_Nac_1$enrichmentScore,
+                   nac1_ranking=sign(gse_Nac_1$enrichmentScore)*-log10(gse_Nac_1$pvalue))
+nac2 <- data.frame(description=gse_Nac_2$Description, nac2_pval=gse_Nac_2$pvalue, nac2_ES=gse_Nac_2$enrichmentScore,
+                   nac2_ranking=sign(gse_Nac_2$enrichmentScore)*-log10(gse_Nac_2$pvalue))
+nac3 <- data.frame(description=gse_Nac_3$Description, nac3_pval=gse_Nac_3$pvalue, nac3_ES=gse_Nac_3$enrichmentScore,
+                   nac3_ranking=sign(gse_Nac_3$enrichmentScore)*-log10(gse_Nac_3$pvalue))
 
-vta1 <- data.frame(description=gse_VTA_1$Description, vta1_pval=gse_VTA_1$pvalue, vta1_ES=gse_VTA_1$enrichmentScore,
-                   vta1_ranking=sign(gse_VTA_1$enrichmentScore)*-log10(gse_VTA_1$pvalue))
-vta2 <- data.frame(description=gse_VTA_2$Description, vta2_pval=gse_VTA_2$pvalue, vta2_ES=gse_VTA_2$enrichmentScore,
-                   vta2_ranking=sign(gse_VTA_2$enrichmentScore)*-log10(gse_VTA_2$pvalue))
-vta3 <- data.frame(description=gse_VTA_3$Description, vta3_pval=gse_VTA_3$pvalue, vta3_ES=gse_VTA_3$enrichmentScore,
-                   vta3_ranking=sign(gse_VTA_3$enrichmentScore)*-log10(gse_VTA_3$pvalue))
-
-gse_allreg <- list(bla1, bla2, bla3,
-                   drn1, drn2, drn3,
+gse_allreg <- list(acc1, acc2, acc3,
                    hb1, hb2, hb3,
                    ins1, ins2, ins3,
-                   nac1, nac2, nac3,
-                   vta1, vta2, vta3) %>%
+                   nac1, nac2, nac3) %>%
   Reduce(function(dtf1,dtf2) full_join(dtf1,dtf2,by="description"), .) %>% arrange(description)
 write_rds(gse_allreg, "gse_allreg.rds")
 
@@ -245,7 +230,8 @@ write_rds(gse_allreg, "gse_allreg.rds")
 
 #### PRINT GSEA RESULT ####
 # load data
-gse_allreg <- readRDS("~/CPID_multiregion/data/2__differential_expression_analysis/gse/gse_allreg.rds")
+setwd("/home/marinevernier/Documents/projets/")
+gse_allreg <- readRDS("female_cpid_multiregion/data/2__differential_expression_analysis/gse/gse_allreg.rds")
 
 gse_heatmap <- function(query){
   # format data
