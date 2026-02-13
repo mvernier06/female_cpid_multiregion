@@ -4,9 +4,9 @@ library(ggplot2)
 rm(list=ls())
 
 #### PATHS ####
-annotated_counts.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
-plot.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/"
-dir.create(plot.path)
+annotated_counts.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
+plot.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/"
+# dir.create(plot.path)
 setwd(plot.path)
 
 #### apeglm no outliers ####
