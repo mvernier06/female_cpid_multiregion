@@ -6,9 +6,9 @@ library(ggalluvial)
 rm(list=ls())
 
 # PATHS ####
-annotated_counts.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
-output.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/data/2__differential_expression_analysis/"
-plot.path <- "/home/marinevernier/Documents/cpid_multiregion/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/deg_volcano"
+annotated_counts.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
+output.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/"
+plot.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/deg_volcano"
 dir.create(plot.path)
 
 annotated_counts <- read_rds(annotated_counts.path)
