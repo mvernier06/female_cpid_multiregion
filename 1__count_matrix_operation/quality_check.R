@@ -4,6 +4,7 @@ library(ggplot2)
 library(DESeq2)
 library(ggrepel)
 library(M3C)
+library(ggpubr)
 
 rm(list=ls())
 
@@ -212,4 +213,39 @@ ggplot(cor_df, aes(x = PC, y = correlation, fill = significant)) +
   theme(legend.position = "none")
 
 ggsave(plot=last_plot(), "spearman_correlation_RIN_PCA_without_outlier.png")
+
+###############################################################################################
+### Etude du RIN pour region ###
+
+coldata <- read_ods(coldata_path)
+
+comparisons <- combn(unique(coldata$reg), 2, simplify = FALSE)
+p <- ggplot(coldata, aes(x = reg, y = RIN, fill = reg)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  geom_jitter(width = 0.15, size = 2, alpha = 0.8) +
+  
+  # # Test global
+  # stat_compare_means(method = "kruskal.test",
+  #                    label.y = max(coldata$RIN) + 0.8) +
+  
+  # Comparaisons 2 à 2
+  stat_compare_means(comparisons = comparisons,
+                     method = "wilcox.test",
+                     p.adjust.method = "BH",
+                     label = "p.signif",
+                     hide.ns = TRUE) +
+  
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "none") +
+  labs(
+    title = "Pairwise comparison of RIN across regions",
+    x = "Region",
+    y = "RIN"
+  )
+
+p
+ggsave(plot=last_plot(), "RIN_boxplots_region.png")
+
+
 
