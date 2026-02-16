@@ -5,8 +5,8 @@ rm(list=ls())
 
 #### PATH ####
 gse_obj.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/gse/gse_obj.Rdata"
-plot.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/gse"
-dir.create(plot.path, showWarnings = FALSE)
+plot.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/go_gsea_analysis/gsea/"
+# dir.create(plot.path, showWarnings = FALSE)
 
 
 
