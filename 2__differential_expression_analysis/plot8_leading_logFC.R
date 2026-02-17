@@ -33,7 +33,7 @@ plotMDS(y, top = 200, group = group, cex = 1, pch = 19,
         col = as.numeric(factor(coldata$reg))) 
 
 col_used <- as.numeric(factor(coldata$reg))
-legend("bottomright", 
+legend("topright", 
        legend = levels(coldata$reg), 
        fill = unique(col_used),  # Utiliser les couleurs uniques
        cex = 0.8)
