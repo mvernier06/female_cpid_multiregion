@@ -18,6 +18,7 @@ library(pheatmap)
 library(grid)  
 library(gtable) 
 library(UpSetR)
+library(GOSemSim)
 
 #### PATHS ####
 ## INPUT ##
@@ -56,7 +57,7 @@ get_dotplot <- function(reg, tp, x_axis, nb_terms, plot_path) {
     return(NULL)
   }
   
-  # Ajout FoldEnrichment si demandé
+  # Ajout FoldEnrichment 
   if (x_axis == "FoldEnrichment") {
     
     df <- res_go@result
@@ -99,7 +100,7 @@ apply(params, 1, function(row) {
   get_dotplot(
     reg = row["reg"], 
     tp = row["tp"], 
-    x_axis = "FoldEnrichment", 
+    x_axis = "geneRatio", 
     nb_terms = 15,
     plot_path = plot.file
   )
@@ -382,4 +383,30 @@ upset_plot(reg = "Hb", plot.path = plot.file)
 #     NULL
 #   })
 # })
+
+################################################################################
+######                              GO Network                                ######
+################################################################################
+
+## test 
+ego <- go_Hb_1
+
+# Calcul similarité sémantique
+ego <- pairwise_termsim(ego)
+
+emapplot(
+  ego,
+  showCategory = 15,   # nombre de termes affichés
+  layout = "kk"        # kamada-kawai (plus joli)
+)
+
+cnetplot(
+  ego,
+  showCategory = 10,
+  foldChange = NULL,  # ou un vecteur log2FC nommé
+  circular = FALSE,
+  colorEdge = TRUE
+)
+
+
 
