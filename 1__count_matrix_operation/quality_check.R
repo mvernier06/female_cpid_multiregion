@@ -248,4 +248,7 @@ p
 ggsave(plot=last_plot(), "RIN_boxplots_region.png")
 
 
-
+ggplot(coldata, aes(x = group, y = RIN)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1)
+ggsave(plot=last_plot(), "RIN_boxplots_group.png")
