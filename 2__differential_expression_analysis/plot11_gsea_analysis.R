@@ -17,7 +17,7 @@ library(UpSetR)
 ## INPUT ##
 gsea <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/fgsea_obj.Rdata"
 # gsea_1 <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/fgsea_1_obj.Rdata"
-go <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/go_obj.Rdata"
+# go <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/go_obj.Rdata"
 
 ## OUTPUT ##
 data <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/"
@@ -26,7 +26,7 @@ plot.file <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/grap
 #### LOAD DATA ####
 load(gsea)
 # load(gsea_1)
-load(go)
+# load(go)
 
 #### CRITERIA ####
 regionList <- c("ACC",  "Ins", "Hb", "Nac")
@@ -343,9 +343,9 @@ go_heatmap <- function(region_list, terms_list, plot.path, top10 = FALSE, max_li
       output_file <- file.path(region_folder, paste0("heatmap_", reg, "_", term, ".png"))
       
       png(output_file, width = 1400, height = 1200, units = "px", res = 300)
-      
+
       breaks <- seq(-maxval, maxval, length.out = 100)
-      
+
       pheatmap(test2,
                display_numbers = TRUE,
                fontsize = 5,
@@ -358,7 +358,7 @@ go_heatmap <- function(region_list, terms_list, plot.path, top10 = FALSE, max_li
                legend_breaks = seq(-maxval, maxval, length.out = 3),
                angle_col = 45
       )
-      
+
       dev.off()
       message(paste("Heatmap saved:", output_file))
     }
