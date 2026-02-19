@@ -33,8 +33,11 @@ list_reg <- c("ACC", "Hb", "Ins", "Nac")
 load(gsea_results)
 load(go_results)
 
-#### REDUCED TERMS FUNCTION #### 
+reg <- "Hb"
+tp <- "1"
+ont <- "BP"
 
+#### REDUCED TERMS FUNCTION #### 
 go_rrvgo <- function(regions, timepoints, ontologies) {
   
   ## GO ## 
@@ -138,6 +141,95 @@ go_rrvgo <- function(regions, timepoints, ontologies) {
             
             # DATA #
             assign(paste("red_gsea", reg, tp, ont, sep = "_"), reducedTerms, envir = .GlobalEnv)
+            
+            gsea_df <- gsea_res@result
+            gsea_df <- gsea_df[gsea_df$ONTOLOGY == ont, ]
+            
+            if (nrow(gsea_df) > 1) {
+              
+              ## ======================
+              ## Séparation UP / DOWN
+              ## ======================
+              
+              gsea_up   <- gsea_df[gsea_df$NES > 0, ]
+              gsea_down <- gsea_df[gsea_df$NES < 0, ]
+              
+              plot_list <- list()
+              
+              ## -------- UP --------
+              if (nrow(gsea_up) > 1) {
+                
+                simMatrix_up <- calculateSimMatrix(gsea_up$ID, 
+                                                   orgdb = "org.Mm.eg.db", 
+                                                   ont = ont, 
+                                                   method = "Rel")
+                
+                scores_up <- setNames(-log10(gsea_up$qvalue), gsea_up$ID)
+                
+                reduced_up <- reduceSimMatrix(simMatrix_up,
+                                              scores_up,
+                                              threshold = 0.7,
+                                              orgdb = "org.Mm.eg.db")
+                
+                treemapPlot(reduced_up) 
+                
+                plot_list$up <- p_up
+                
+                assign(paste("red_gsea_up", reg, tp, ont, sep = "_"),
+                       reduced_up, envir = .GlobalEnv)
+              }
+              
+              ## -------- DOWN --------
+              if (nrow(gsea_down) > 1) {
+                
+                simMatrix_down <- calculateSimMatrix(gsea_down$ID, 
+                                                     orgdb = "org.Mm.eg.db", 
+                                                     ont = ont, 
+                                                     method = "Rel")
+                
+                scores_down <- setNames(-log10(gsea_down$qvalue), gsea_down$ID)
+                
+                reduced_down <- reduceSimMatrix(simMatrix_down,
+                                                scores_down,
+                                                threshold = 0.7,
+                                                orgdb = "org.Mm.eg.db")
+                
+                p_down <- treemapPlot(reduced_down) + 
+                  ggplot2::ggtitle("DOWN (NES < 0)")
+                
+                plot_list$down <- p_down
+                
+                assign(paste("red_gsea_down", reg, tp, ont, sep = "_"),
+                       reduced_down, envir = .GlobalEnv)
+              }
+              
+              ## ======================
+              ## Sauvegarde PNG combiné
+              ## ======================
+              if (length(plot_list) > 0) {
+                
+                plot_folder <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/go_gsea_analysis/gsea/treemap/up_down"
+                
+                if (!dir.exists(plot_folder)) {
+                  dir.create(plot_folder, recursive = TRUE)
+                }
+                
+                output_file <- file.path(plot_folder,
+                                         paste0("treemap_", reg, "_tp", tp, "_", ont, "_UP_DOWN.png"))
+                
+                png(output_file, width = 14, height = 7, units = "in", res = 600)
+                
+                if (length(plot_list) == 1) {
+                  # Un seul plot → pas de grid.arrange
+                  print(plot_list[[1]])
+                } else {
+                  gridExtra::grid.arrange(grobs = plot_list, ncol = 2)
+                }
+                
+                dev.off()
+              }
+                
+            }
           }
         }
         
