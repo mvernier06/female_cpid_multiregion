@@ -83,7 +83,18 @@ apply(params, 1, function(row) {
   get_dotplot(
     reg = row["reg"], 
     tp = row["tp"], 
-    x_axis = "GeneRatio", 
+    x_axis = "GeneRatio", # ca fonctionne car dotplot calcul GeneRatio = Count / setSize en interne 
+    nb_terms = 15,
+    plot_path = plot.file
+  )
+})
+
+#### APPLY FUNCTION #### 
+apply(params, 1, function(row) {
+  get_dotplot(
+    reg = row["reg"], 
+    tp = row["tp"], 
+    x_axis = "NES", 
     nb_terms = 15,
     plot_path = plot.file
   )
@@ -94,90 +105,91 @@ apply(params, 1, function(row) {
 ######                          DOTPLOT ODD RATIO                         ######
 ################################################################################
 
+### Pourquoi faire du enrichGO dans la partie gsea ??
 
-odds_ratio <- function(reg, tp, x_axis, plot_path) {
-  # S'assurer que le dossier existe
-  output_dir <- file.path(plot_path, "dotplots", reg, x_axis)
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-  
-  # Récupérer l'objet FGSEA ou enrichGO (ici on part sur enrichGO pour l'odds ratio)
-  enr_name <- paste0("go_", reg, "_", tp)
-  res_enrich <- get(enr_name)
-  
-  # Vérifier si l'objet existe
-  if (!exists(enr_name)) {
-    message(paste("Objet", enr_name, "n'existe pas."))
-    return(NULL)
-  }
-  
-  res_enrich <- get(enr_name)
-  
-  # Vérifier s'il y a des résultats significatifs
-  df <- as.data.frame(res_enrich)
-  if (nrow(df) == 0) {
-    message(paste("Aucun résultat dans", enr_name, "- on skip."))
-    return(NULL)
-  }
-  
-  # Transformer en data frame pour calculer les odds ratio
-  df <- as.data.frame(res_enrich)
-  
-  # Évaluer les ratios en nombre
-  eval_ratio <- function(ratio_str) {
-    parts <- strsplit(ratio_str, "/")[[1]]
-    as.numeric(parts[1]) / as.numeric(parts[2])
-  }
-  
-  df$GeneRatio_num <- unlist(sapply(strsplit(df$GeneRatio, "/"), 
-                                    function(x) as.numeric(x[1]) / as.numeric(x[2])))
-  df$BgRatio_num   <- unlist(sapply(strsplit(df$BgRatio, "/"),   
-                                    function(x) as.numeric(x[1]) / as.numeric(x[2])))
-  
-  # Calcul de l’odds ratio
-  df$odds_ratio <- (df$GeneRatio_num / (1 - df$GeneRatio_num)) /
-    (df$BgRatio_num / (1 - df$BgRatio_num))
-  
-  # Remettre les données dans l'objet enrichResult avec les nouvelles colonnes
-  res_enrich@result <- df
-  
-  # Faire le dotplot avec l'odds_ratio sur l’axe X
-  dotplot_gsea <- dotplot(
-    res_enrich,
-    showCategory = 15,
-    x = "odds_ratio",
-    title = paste0("Dotplot (Odds Ratio) - ", reg, " TP", tp)
-  )
-  
-  # Sauvegarde
-  ggsave(
-    filename = file.path(output_dir, paste0("dotplot_odds_ratio_", reg, "_tp", 
-                                            tp, ".png")),
-    plot = dotplot_gsea,
-    bg = "white",
-    width = 1900,
-    height = 1200,
-    units = "px",
-    scale = 2
-  )
-}
-
-
-#### PARAMETERS ####
-regionList <- c("ACC", "Ins", "Hb", "Nac")
-tpList <- c(1, 2, 3)
-params <- expand.grid(reg = regionList, tp = tpList)
-
-#### APPLY FUNCTION #### 
-apply(params, 1, function(row) {
-  odds_ratio(
-    reg = row[["reg"]], 
-    tp = as.numeric(row[["tp"]]),
-    x_axis = "odds ratio", 
-    plot_path = plot.file
-  )
-})
+# odds_ratio <- function(reg, tp, x_axis, plot_path) {
+#   # S'assurer que le dossier existe
+#   output_dir <- file.path(plot_path, "dotplots", reg, x_axis)
+#   if (!dir.exists(output_dir)) {
+#     dir.create(output_dir, recursive = TRUE)
+#   }
+#   
+#   # Récupérer l'objet FGSEA 
+#   enr_name <- paste0("go_", reg, "_", tp)
+#   res_enrich <- get(enr_name)
+#   
+#   # Vérifier si l'objet existe
+#   if (!exists(enr_name)) {
+#     message(paste("Objet", enr_name, "n'existe pas."))
+#     return(NULL)
+#   }
+#   
+#   res_enrich <- get(enr_name)
+#   
+#   # Vérifier s'il y a des résultats significatifs
+#   df <- as.data.frame(res_enrich)
+#   if (nrow(df) == 0) {
+#     message(paste("Aucun résultat dans", enr_name, "- on skip."))
+#     return(NULL)
+#   }
+#   
+#   # Transformer en data frame pour calculer les odds ratio
+#   df <- as.data.frame(res_enrich)
+#   
+#   # Évaluer les ratios en nombre
+#   eval_ratio <- function(ratio_str) {
+#     parts <- strsplit(ratio_str, "/")[[1]]
+#     as.numeric(parts[1]) / as.numeric(parts[2])
+#   }
+#   
+#   df$GeneRatio_num <- unlist(sapply(strsplit(df$GeneRatio, "/"), 
+#                                     function(x) as.numeric(x[1]) / as.numeric(x[2])))
+#   df$BgRatio_num   <- unlist(sapply(strsplit(df$BgRatio, "/"),   
+#                                     function(x) as.numeric(x[1]) / as.numeric(x[2])))
+#   
+#   # Calcul de l’odds ratio
+#   df$odds_ratio <- (df$GeneRatio_num / (1 - df$GeneRatio_num)) /
+#     (df$BgRatio_num / (1 - df$BgRatio_num))
+#   
+#   # Remettre les données dans l'objet enrichResult avec les nouvelles colonnes
+#   res_enrich@result <- df
+#   
+#   # Faire le dotplot avec l'odds_ratio sur l’axe X
+#   dotplot_gsea <- dotplot(
+#     res_enrich,
+#     showCategory = 15,
+#     x = "odds_ratio",
+#     title = paste0("Dotplot (Odds Ratio) - ", reg, " TP", tp)
+#   )
+#   
+#   # Sauvegarde
+#   ggsave(
+#     filename = file.path(output_dir, paste0("dotplot_odds_ratio_", reg, "_tp", 
+#                                             tp, ".png")),
+#     plot = dotplot_gsea,
+#     bg = "white",
+#     width = 1900,
+#     height = 1200,
+#     units = "px",
+#     scale = 2
+#   )
+# }
+# 
+# 
+# #### PARAMETERS ####
+# regionList <- c("ACC", "Ins", "Hb", "Nac")
+# tpList <- c(1, 2, 3)
+# params <- expand.grid(reg = regionList, tp = tpList)
+# 
+# #### APPLY FUNCTION #### 
+# apply(params, 1, function(row) {
+#   odds_ratio(
+#     reg = row[["reg"]], 
+#     tp = as.numeric(row[["tp"]]),
+#     x_axis = "odds ratio", 
+#     plot_path = plot.file
+#   )
+# })
 
 
 
@@ -185,28 +197,28 @@ apply(params, 1, function(row) {
 ######                            ENRICHPLOT                              ######
 ################################################################################
 
-# get_enrichplot <- function(region, tp, term, plot.path) { 
-#   
+# get_enrichplot <- function(region, tp, term, plot.path) {
+# 
 #   fgsea_res <- get(paste0("fgsea_", region, "_", tp), envir = .GlobalEnv)
 #   fgsea_df <- as.data.frame(fgsea_res)
-#   # get term index 
+#   # get term index
 #   term_index <- which(fgsea_df$Description == term)
-#   
-#   # plot 
+# 
+#   # plot
 #   plot <- gseaplot2(fgsea_res, geneSetID = term_index,
 #                     title = paste0(term, " - ", region, " TP", tp ))
-#   # save 
+#   # save
 #   region_dir <- file.path(plot.path, region, "enrichplot")
 #   if (!dir.exists(region_dir)) dir.create(region_dir, recursive = TRUE)
-#   
-#   ggsave(file= paste0(region_dir, term, "_", region, "_tp", tp, ".png"), plot=plot, 
+# 
+#   ggsave(file= paste0(region_dir, term, "_", region, "_tp", tp, ".png"), plot=plot,
 #          bg="white", width=1900, height=1200, units="px", scale=2)
-#   
+# 
 # }
 # 
 # get_enrichplot(region = "Hb", tp = 1, term = "compact myelin", plot.path = plot.file)
 # 
-# 
+
 # #### GET GENES (EXCEL FILE) ####
 
 
