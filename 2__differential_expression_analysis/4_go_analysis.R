@@ -267,3 +267,40 @@ gse_heatmap <- function(query){
 
 gse_heatmap("myelin")
 gse_heatmap("calcium")
+
+########################################################################################################################################
+
+deg_summary <- data.frame()
+
+for(reg in regionList){
+  for(tp in tpList){
+    
+    # Sélection des colonnes correspondant à la région et tp
+    df_temp <- counts %>%
+      dplyr::select(
+        MGI.symbol,
+        contains(reg) & contains(paste0("tp", tp)) & 
+          (contains("log2fc") | contains("pval") | contains("padj"))
+      ) %>%
+      na.omit()
+    
+    colnames(df_temp) <- c("gene", "log2fc", "pval", "padj")
+    
+    # Comptages
+    n_pval  <- sum(df_temp$pval < 0.05)
+    n_padj  <- sum(df_temp$padj < 0.05)
+    
+    deg_summary <- rbind(
+      deg_summary,
+      data.frame(
+        region = reg,
+        tp = tp,
+        DEG_pvalue = n_pval,
+        DEG_padj = n_padj
+      )
+    )
+  }
+}
+
+deg_summary
+
