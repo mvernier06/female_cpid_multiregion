@@ -3,7 +3,7 @@
 
 rm(list=ls())
 
-dir.create("~/R/library", showWarnings = FALSE, recursive = TRUE)
+# dir.create("~/R/library", showWarnings = FALSE, recursive = TRUE)
 .libPaths(c("~/R/library", .libPaths()))
 
 Sys.setenv(R_COMPILE_AND_INSTALL_PACKAGES = "always") 
@@ -290,8 +290,6 @@ go_heatmap(regionList, terms_list, plot.file)
 ######                              UPSETR                                ######
 ################################################################################
 
-reg <- "Hb"
-plot.path <- plot.file
 upset_plot <- function(reg, plot.path) { 
   # Chargement des packages nécessaires
   library(UpSetR)
@@ -385,28 +383,62 @@ upset_plot(reg = "Hb", plot.path = plot.file)
 # })
 
 ################################################################################
-######                              GO Network                                ######
+######                             GO Network                             ######
 ################################################################################
 
 ## test 
-ego <- go_Hb_1
+ego <- fgsea_Nac_3
 
-# Calcul similarité sémantique
+# categories <- c("regulation of neuron projection development", "neuron projection morphogenesis",  
+#                 "nervous system process", "regulation of nervous system development"  , "positive regulation of nervous system development" ,
+#                 "neurotransmitter transport",
+#                 "central nervous system development", "regulation of nervous system process" ,
+#                 "axon development", "distal axon", "axon terminus" )
+#                
+# # Vérifier quels termes sont présents
+# categories_found <- categories[categories %in% ego@result$Description]
+# cat("Termes trouvés:", length(categories_found), "/", length(categories), "\n")
+# print(categories_found)
+
+# Recalcul similarité sémantique 
 ego <- pairwise_termsim(ego)
 
-emapplot(
+# emapplot avec les descriptions sélectionnées
+p1 <- emapplot(
   ego,
-  showCategory = 15,   # nombre de termes affichés
-  layout = "kk"        # kamada-kawai (plus joli)
-)
+  showCategory = 25
+) +
+  ggtitle("GO Enrichment Map\nTop 25 enriched termes") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
-cnetplot(
+p1
+
+# EMAPPLOT
+p1 <- emapplot(
   ego,
-  showCategory = 10,
-  foldChange = NULL,  # ou un vecteur log2FC nommé
+  showCategory = categories,
+  layout = "kk"
+) +
+  ggtitle("GO Enrichment Map\nCustom enriched terms") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+p1
+
+# CNETPLOT
+p2 <- cnetplot(
+  ego,
+  showCategory = 5,
+  foldChange = NULL,
   circular = FALSE,
   colorEdge = TRUE
-)
+) +
+  ggtitle("GO Gene-Concept Network\nTop 5 termes enrichis") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+p2
+
+fgsea_Nac_3@result$Description
+
 
 
 
