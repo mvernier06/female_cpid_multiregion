@@ -33,9 +33,6 @@ list_reg <- c("ACC", "Hb", "Ins", "Nac")
 load(gsea_results)
 load(go_results)
 
-reg <- "Hb"
-tp <- "1"
-ont <- "BP"
 
 #### REDUCED TERMS FUNCTION #### 
 go_rrvgo <- function(regions, timepoints, ontologies) {
@@ -80,7 +77,7 @@ go_rrvgo <- function(regions, timepoints, ontologies) {
                                                          tp , "_", ont, ".png"))
             
             png(output_file, width = 8, height = 8, units = "in", res = 600)
-            treemapPlot(reducedTerms)  # Utilise grid.draw pour afficher
+            treemapPlot(reducedTerms)  
             dev.off()
             
             # DATA #
@@ -136,7 +133,7 @@ go_rrvgo <- function(regions, timepoints, ontologies) {
                                                          tp, "_", ont, ".png"))
             
             png(output_file, width = 8, height = 8, units = "in", res = 600)
-            treemapPlot(reducedTerms)  # Utilise grid.draw pour afficher
+            treemapPlot(reducedTerms)  
             dev.off()
             
             # DATA #
@@ -154,7 +151,6 @@ go_rrvgo <- function(regions, timepoints, ontologies) {
               gsea_up   <- gsea_df[gsea_df$NES > 0, ]
               gsea_down <- gsea_df[gsea_df$NES < 0, ]
               
-              plot_list <- list()
               
               ## -------- UP --------
               if (nrow(gsea_up) > 1) {
@@ -171,9 +167,18 @@ go_rrvgo <- function(regions, timepoints, ontologies) {
                                               threshold = 0.7,
                                               orgdb = "org.Mm.eg.db")
                 
-                treemapPlot(reduced_up) 
+                plot_folder <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/go_gsea_analysis/gsea/treemap/up/"
+                if (!dir.exists(plot_folder)) {
+                  dir.create(plot_folder, recursive = TRUE)
+                }
+               
+                output_file <- file.path(plot_folder, paste0("treemap_up_", reg, "_tp", 
+                                                             tp, "_", ont, ".png"))
                 
-                plot_list$up <- p_up
+                png(output_file, width = 8, height = 8, units = "in", res = 600)
+                treemapPlot(reduced_up)
+                dev.off()
+  
                 
                 assign(paste("red_gsea_up", reg, tp, ont, sep = "_"),
                        reduced_up, envir = .GlobalEnv)
@@ -194,45 +199,24 @@ go_rrvgo <- function(regions, timepoints, ontologies) {
                                                 threshold = 0.7,
                                                 orgdb = "org.Mm.eg.db")
                 
-                p_down <- treemapPlot(reduced_down) + 
-                  ggplot2::ggtitle("DOWN (NES < 0)")
-                
-                plot_list$down <- p_down
-                
-                assign(paste("red_gsea_down", reg, tp, ont, sep = "_"),
-                       reduced_down, envir = .GlobalEnv)
-              }
-              
-              ## ======================
-              ## Sauvegarde PNG combiné
-              ## ======================
-              if (length(plot_list) > 0) {
-                
-                plot_folder <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/go_gsea_analysis/gsea/treemap/up_down"
-                
+                plot_folder <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/go_gsea_analysis/gsea/treemap/down/"
                 if (!dir.exists(plot_folder)) {
                   dir.create(plot_folder, recursive = TRUE)
                 }
                 
-                output_file <- file.path(plot_folder,
-                                         paste0("treemap_", reg, "_tp", tp, "_", ont, "_UP_DOWN.png"))
+                output_file <- file.path(plot_folder, paste0("treemap_down_", reg, "_tp", 
+                                                             tp, "_", ont, ".png"))
                 
-                png(output_file, width = 14, height = 7, units = "in", res = 600)
-                
-                if (length(plot_list) == 1) {
-                  # Un seul plot → pas de grid.arrange
-                  print(plot_list[[1]])
-                } else {
-                  gridExtra::grid.arrange(grobs = plot_list, ncol = 2)
-                }
-                
+                png(output_file, width = 8, height = 8, units = "in", res = 600)
+                treemapPlot(reduced_down)
                 dev.off()
-              }
                 
+                assign(paste("red_gsea_down", reg, tp, ont, sep = "_"),
+                       reduced_down, envir = .GlobalEnv)
+              }
             }
           }
         }
-        
       }
     }
   }
