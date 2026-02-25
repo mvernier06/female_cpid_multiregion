@@ -1,4 +1,4 @@
-# betaprior sans outliers (betaprior avec outliers = anciens rrho2)
+# betaprior sans outliers
 
 library(tidyverse)
 library(DESeq2)
