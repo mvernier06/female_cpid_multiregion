@@ -8,6 +8,8 @@ library(readODS)
 library(ggrepel)
 library(umap)
 library(patchwork)
+library(ComplexHeatmap)
+library(circlize)
 
 rm(list=ls())
 
@@ -17,23 +19,23 @@ setwd("/home/marinevernier/Documents/projets/")
 
 
 #### PATHS ####
-raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv"
-coldata_path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods"
+raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv" # ne contient pas les outliers
+coldata_path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods" # contient les outliers, peuvent être suprimés dans le scripts ou prendre coldata_without_outliers.ods
 plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/pca/"
 output.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/"
 
-outlier <- c("Ins.1837")
+outlier <- c("Ins.1837", "Nac.1837", "Hb.2049", "Hb.1839")
 
 coldata <- read_ods(coldata_path)
 raw_counts <- read.csv(raw_counts_path) %>%
   column_to_rownames("MGI.symbol")
 
-# enlever l'outlier 
+# enlever les outliers
 coldata <- coldata %>%
   filter(!sample %in% outlier)
 raw_counts <- raw_counts[, coldata$sample, drop = FALSE]
 
-setwd("/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/without_outlier/")
+setwd(output.path)
 
 
 ## normalization because PCA shows distances
@@ -65,7 +67,7 @@ head(annon)
 
 
 pca(data,labels=annon$consensuscluster,legendtextsize = 10,axistextsize = 10,dotsize=2) +
-  labs( title="PCA on VST normalized counts ") # affichange de la pca avec le clustering consensus 
+  labs( title="PCA on VST normalized counts ") # affichage de la pca avec le clustering consensus 
 ggsave(plot=last_plot(), "PCA_raw_counts.png")
 
 # On rajoute les colonnes qui nous intéressent pour colorier la PCA 
@@ -75,7 +77,7 @@ annon <- annon %>%
     coldata %>%  select(sample, reg, group),
     by = "sample"
   )
-# PCA sur les données ordonnées
+
 pca <- prcomp(t(data), scale. = FALSE)
 
 pca_df <- as.data.frame(pca$x) %>%
@@ -155,7 +157,7 @@ corrplot(
   tl.srt = 90          # rotation
 )
 legend("topright", legend = names(reg_cols), fill = reg_cols,
-       title = "Region", cex = 3, bty = "n")
+       title = "Region", cex = 3, bty = "n") ## attention, l'affichage dans la console R n'est aps le même que dans le png, il faut adapter les tailles  
 
 dev.off()
 
@@ -193,6 +195,56 @@ legend("bottomright", legend = names(group_cols), fill = group_cols,
        title = "Group", cex = 1.2, bty = "n")
 dev.off()
 
+### tentative de heatmap mieux légendée ###
+
+
+# matrice de corrélation
+cor_matrix <- cor(df2)
+
+# ordre déjà défini via new_order
+cor_matrix <- cor_matrix[rownames(anno), rownames(anno)]
+
+# annotations
+ha <- HeatmapAnnotation(
+  Region = anno$reg,
+  Timepoint = anno$timepoint,
+  Group = anno$group,
+  col = list(
+    Region = reg_cols,
+    Timepoint = tp_cols,
+    Group = group_cols
+  ),
+  annotation_height = unit(c(6, 6, 6), "mm")
+)
+
+png("heatmap_structured.png", width = 3500, height = 3500, res = 300)
+
+Heatmap(
+  cor_matrix,
+  name = "Correlation",
+  col = colorRamp2(
+    c(0.2, 0.6, 1),
+    c("red", "white", "blue")
+  ),
+  
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  
+  show_row_names = FALSE,
+  show_column_names = FALSE,
+  
+  top_annotation = ha,
+  
+  # column_split = anno$reg,   # séparation par région
+  # row_split = anno$reg,      # blocs carrés nets
+  
+  border = TRUE
+  # column_gap = unit(2, "mm"),
+  # row_gap = unit(2, "mm")
+)
+
+dev.off()
+
 #################################################################
 #### T-SNE ON RAW COUNTS ####
 
@@ -222,7 +274,7 @@ t_labeled_all <- t +
   geom_text_repel(
     data = t$data,
     aes(label = sample),
-    size = 3,           # taille réduite pour 163 samples
+    size = 3,           # taille réduite 
     max.overlaps = Inf, # permet de forcer l'affichage de tous
     segment.size = 0.3  # petite ligne de liaison
   )
@@ -238,7 +290,7 @@ ggsave("tsne_raw_counts_all_samples_labeled.png",
 plots <- list()
 
 for(i in 1:9){   
-  set.seed(i)    # ensures each run is different but reproducible
+  set.seed(i)   
   
   ti <- tsne(
     vst_counts,
@@ -502,3 +554,94 @@ for(i in 1:9){
 
 # wrap_plots(plots, ncol = 3)
 plots[[9]]
+
+
+###################################################################################################################
+#################################      PCA intra tp      ######################################################
+
+setwd("pca/pca_intra_tp/")
+tpList <- c("1", "2", "3")
+for (tp in tpList) {
+  sample <- coldata %>%
+    filter(timepoint == tp) %>%
+    pull(sample)
+  
+  counts <- vst_counts[, sample]
+  
+  pca <- prcomp(t(counts), scale. = FALSE)
+  
+  pca_df <- as.data.frame(pca$x) %>%
+    rownames_to_column("sample") %>%
+    left_join(
+      coldata %>% select(sample, reg, group),
+      by = "sample"
+    )
+  
+  ggplot(pca_df, aes(PC1, PC2, color = group, label = sample)) +
+    geom_point(size = 3) +
+   
+    theme_classic() +
+    labs(
+      title = paste0("PCA intra-tp : ", tp),
+      x = paste0("PC1 (", round(100 * summary(pca)$importance[2,1], 0), "%)"),
+      y = paste0("PC2 (", round(100 * summary(pca)$importance[2,2], 0), "%)")
+    )
+  filename_plot <- paste0("PCA_tp", tp, "_group.png")
+  ggsave(plot=last_plot(), filename_plot)
+  
+  ggplot(pca_df, aes(PC1, PC2, color = reg, label = sample)) +
+    geom_point(size = 3) +
+    
+    theme_classic() +
+    labs(
+      title = paste0("PCA intra-tp : ", tp),
+      x = paste0("PC1 (", round(100 * summary(pca)$importance[2,1], 0), "%)"),
+      y = paste0("PC2 (", round(100 * summary(pca)$importance[2,2], 0), "%)")
+    )
+  filename_plot <- paste0("PCA_tp", tp, "_region.png")
+  ggsave(plot=last_plot(), filename_plot)
+  
+}
+
+
+###################################################################################################################
+#################################      PCA intra tp + intra group     #############################################
+setwd("../pca_intra_tp_reg")
+regList <- c("ACC", "Hb", "Ins", "Nac")
+
+for (tp in tpList) {
+  for (region in regList) {
+    samples <- coldata %>%
+      filter(timepoint == tp ) %>%
+      filter(reg == region) %>%
+      pull(sample)
+    counts <- vst_counts[, samples]
+    pca_tp_reg <- prcomp(t(counts), scale. = FALSE)
+    pca_df <- as.data.frame(pca_tp_reg$x) %>%
+      rownames_to_column("sample") %>%
+      left_join(
+        coldata %>% select(sample, group, RIN),
+        by = "sample"
+      )
+    
+    p <- ggplot(pca_df, aes(PC1, PC2, color = RIN, label = sample)) + 
+      geom_point(size = 3) + 
+      theme_classic() +
+      labs(
+        title = paste0("PCA intra-tp-region : ", region, tp),
+        x = paste0("PC1 (", round(100 * summary(pca_tp_reg)$importance[2,1], 0), "%)"),
+        y = paste0("PC2 (", round(100 * summary(pca_tp_reg)$importance[2,2], 0), "%)")
+      )
+    filename_plot <- paste0("PCA_", region, tp, "_rin.png")
+    ggsave(plot = p, filename_plot)
+      
+  }
+}
+
+
+
+
+
+
+
+
