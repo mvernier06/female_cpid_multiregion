@@ -348,4 +348,136 @@ ggsave(plot = last_plot(), "Uty_boxplot_male_female_unfiltered.png")
 
 
 #####################################################################################################################################
+###       Comparaison des n() et DEG des males et femelles ###
 
+
+table(coldata_female$reg, coldata_female$timepoint, coldata_female$group)
+table(coldata_male$reg, coldata_male$timepoint, coldata_male$group)
+
+table(coldata_all$sex)
+table(coldata_all$sex,
+      coldata_all$reg,
+      coldata_all$timepoint,
+      coldata_all$group)
+
+df_plot <- coldata_all %>%
+  as.data.frame() %>%
+  dplyr::count(sex, reg, timepoint, group)
+
+
+ggplot(df_plot,
+       aes(x = interaction( timepoint, reg),
+           y = n,
+           fill = sex)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(width = 0.8)) +
+  facet_wrap(~ group, nrow = 1) +   # ← 2 graphiques côte à côte
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        strip.text = element_text(size = 12, face = "bold")) +
+  labs(x = "Region_Timepoint",
+       y = "N samples",
+       fill = "Sex")
+
+common_reg <- c("Ins", "Hb", "NAc")
+df_common <- df_plot %>%
+  filter(reg %in% common_reg)
+df_cuff <- df_common %>%
+  filter(group == "cuff")
+
+ggplot(df_cuff,
+       aes(x = timepoint,
+           y = n,
+           fill = sex)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(width = 0.8)) +
+  facet_wrap(~ reg) +
+  scale_y_continuous(limits = c(0, 8),
+                     breaks = 0:8) +
+  theme_minimal() +
+  labs(title = "Cuff (common regions only)",
+       x = "Timepoint",
+       y = "N samples",
+       fill = "Sex")
+ggsave(plot=last_plot(), "number_of_sample_for_cuff_male_and_female.png")
+
+df_sham <- df_common %>%
+  filter(group == "sham")
+
+ggplot(df_sham,
+       aes(x = timepoint,
+           y = n,
+           fill = sex)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(width = 0.8)) +
+  facet_wrap(~ reg) +
+  scale_y_continuous(limits = c(0, 8),
+                     breaks = 0:8) +
+  theme_minimal() +
+  labs(title = "Sham (common regions only)",
+       x = "Timepoint",
+       y = "N samples",
+       fill = "Sex")
+ggsave(plot=last_plot(), "number_of_sample_for_sham_male_and_female.png")
+
+deglist_male <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
+deglist_female <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
+
+load(deglist_male)
+
+male_objs <- ls(pattern = "^deg_")
+
+for(obj in male_objs){
+  assign(paste0(obj, "_male"), get(obj))
+  rm(list = obj)
+}
+
+load(deglist_female)
+
+female_objs <- ls(pattern = "^deg_")
+
+for(obj in female_objs){
+  assign(paste0(obj, "_female"), get(obj))
+  rm(list = obj)
+}
+
+all_deg_objs <- ls(pattern = "^deg_")
+
+deg_counts <- map_df(all_deg_objs, function(obj){
+  
+  df <- get(obj)
+  
+  tibble(
+    object = obj,
+    n_deg = nrow(df)
+  )
+})
+
+deg_counts <- deg_counts %>%
+  separate(object,
+           into = c("deg", "reg", "timepoint", "sex"),
+           sep = "_") %>%
+  select(reg, timepoint, sex, n_deg)
+
+
+deg_counts <- deg_counts %>%
+  mutate(reg = case_when(
+    tolower(reg) == "nac" ~ "NAc",  # corrige Nac/NAC/nac
+    TRUE ~ reg                     # les autres restent identiques
+  ))
+
+deg_counts <- deg_counts %>% filter(reg %in% common_reg)
+
+ggplot(deg_counts,
+       aes(x = timepoint,
+           y = n_deg,
+           fill = sex)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(width = 0.8)) +
+  facet_wrap(~ reg) +
+  theme_minimal() +
+  labs(title = "Number of DEG per region and timepoint",
+       x = "Timepoint",
+       y = "Number of DEG",
+       fill = "Sex")
+ggsave(plot=last_plot(), "number_of_DEG_male_vs_female.png")
