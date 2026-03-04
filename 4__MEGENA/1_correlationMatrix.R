@@ -7,7 +7,8 @@ library(edgeR)
 setwd("/home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/")
 
 # Choose a region (ACC, Hb, Ins, Nac)
-reg <- "Hb"
+reg <- "Ins"
+print(paste("Doing correlation matrix for region:", reg))
 
 # PATHS ####
 logCPM_RINcorrected.path <- paste0("data/4__MEGENA/logCPM_RINcorrected_", reg, ".Rdata") # CTF normalized counts for the queried region

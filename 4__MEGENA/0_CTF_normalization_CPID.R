@@ -14,7 +14,7 @@ annotated_counts.path <- "data/2__differential_expression_analysis/annotated_cou
 coldata.path <- "data/counts_m39_M32/coldata_without_outliers.ods" # pour récpérer les RIN et les groupes
 output.path <- "data/4__MEGENA/" # folder to save results
 dir.create(output.path)
-reg <- "Hb"
+
 for(reg in regionlist){
   # load unnormalised counts as dataframe 
   annotated_counts <- read_csv(annotated_counts.path)
