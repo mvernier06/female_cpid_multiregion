@@ -13,6 +13,8 @@ raw_counts.path <- "female_cpid_multiregion/data/counts_m39_M32/cpid_multireg_co
 coldata.path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods"
 annot_table.path <- "female_cpid_multiregion/data/counts_m39_M32/annotation_final.csv"
 
+setwd("/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/1__count_matrix_operation/quality_check/")
+
 #### Formatting raw counts ####
 raw_counts <- read.table(raw_counts.path, header = TRUE,
                          sep = "\t",
@@ -218,15 +220,17 @@ result_delta <- data.frame(
   max_abs_delta = max_abs_delta
   
 )
-result_delta <- result_delta[order(-result_delta$abs_mean_delta_LFC), ]
+result_delta <- result_delta[order(-result_delta$max_abs_delta), ]
 
 head(result_delta, 20)
 
-## Facteur confondant : 
-boxplot(RIN ~ group, data = coldata,
-        main = "Distribution du RIN par groupe")
-wilcox.test(RIN ~ group, data = coldata)
 
+## Facteur confondant : 
+ggplot(coldata, aes(x = group, y = RIN))+
+  geom_boxplot()+
+  ggtitle("Distribution du RIN par group")
+wilcox.test(RIN ~ group, data = coldata)
+ggsave(plot = last_plot(), "Distribution_RIN_per_group.png")
 
 ggplot(coldata, aes(x = interaction(group, reg),
                     y = RIN,
@@ -234,10 +238,15 @@ ggplot(coldata, aes(x = interaction(group, reg),
   geom_boxplot() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(plot = last_plot(), "Distribution_RIN_group_reg.png")
+
+png("interaction_RIN_group_reg.png", width = 800, height = 600)
 
 interaction.plot(coldata$group,
                  coldata$reg,
                  coldata$RIN)
+
+dev.off()
 
 # anova(lm(RIN ~ group + reg + timepoint, data = coldata))  # faux, faudrait rajouter l'interaction mais ca devint ininterpretable 
 
