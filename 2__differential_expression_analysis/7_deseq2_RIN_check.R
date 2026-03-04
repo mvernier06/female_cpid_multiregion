@@ -112,16 +112,7 @@ Deseq2MultiReg_basic <- function(regionList, tpList){
     for (region in regionList){
       
       print(paste0("Computing stastistics about TP", tp, " of ", region))
-      counts$Geneid <-  str_replace(counts$Geneid, "\\..*", "") 
       
-      ens2symbol <- read.csv(annot_table.path, sep=";")
-      ens2symbol <- ens2symbol %>% dplyr::select(!X)
-      
-      annotated_counts <- inner_join(counts, ens2symbol, by=c("Geneid"="Gene.stable.ID"))
-      annotated_counts <- annotated_counts %>% relocate(MGI.symbol, .before=Geneid) 
-      
-      # remove duplicates to avoid alluvial errors (ex: pattern ns_ns_ns)
-      annotated_counts <- annotated_counts[!duplicated(annotated_counts$MGI.symbol),]
       # Compute pval, qval and lfc related to the difference of sham vs cuff for each timepoint per region
       dds <- DESeqDataSetFromMatrix(countData=df[, grepl(region, names(df))], 
                                     colData=metadata[str_detect(metadata$reg, region),], 
@@ -151,23 +142,17 @@ Deseq2MultiReg_basic <- function(regionList, tpList){
 counts_RIN <- Deseq2MultiReg_RIN(unique(coldata$reg), unique(coldata$timepoint))
 counts_basic <-  Deseq2MultiReg_basic(unique(coldata$reg), unique(coldata$timepoint))
 
+### annotate counts, using same methode as 2_annotate_counts.R ###
 counts_RIN$Geneid <-  str_replace(counts_RIN$Geneid, "\\..*", "") 
-
 ens2symbol <- read.csv(annot_table.path, sep=";")
 ens2symbol <- ens2symbol %>% dplyr::select(!X)
-
 counts_RIN <- inner_join(counts_RIN, ens2symbol, by=c("Geneid"="Gene.stable.ID"))
 counts_RIN <- counts_RIN %>% relocate(MGI.symbol, .before=Geneid) 
-
-# remove duplicates to avoid alluvial errors (ex: pattern ns_ns_ns)
 counts_RIN <- counts_RIN[!duplicated(counts_RIN$MGI.symbol),]
 
 counts_basic$Geneid <-  str_replace(counts_basic$Geneid, "\\..*", "") 
-
 counts_basic <- inner_join(counts_basic, ens2symbol, by=c("Geneid"="Gene.stable.ID"))
 counts_basic <- counts_basic %>% relocate(MGI.symbol, .before=Geneid) 
-
-# remove duplicates to avoid alluvial errors (ex: pattern ns_ns_ns)
 counts_basic <- counts_basic[!duplicated(counts_basic$MGI.symbol),]
 
 
@@ -176,6 +161,7 @@ l2fc_basic_cols <- grep("_log2fc_tp", colnames(counts_basic), value = TRUE)
 l2fc_RIN_cols   <- grep("_log2fc_tp", colnames(counts_RIN), value = TRUE)
 
 stopifnot(l2fc_basic_cols == l2fc_RIN_cols)
+
 
 x_all <- unlist(counts_basic[, l2fc_basic_cols])
 y_all <- unlist(counts_RIN[, l2fc_RIN_cols])
@@ -205,12 +191,12 @@ for (i in seq_along(l2fc_basic_cols)) {
   r <- cor(x[keep], y[keep])
   
   p <- plot(x[keep], y[keep],
-       pch = 16,
-       cex = 0.4,
-       main = paste0(l2fc_basic_cols[i],
-                     "\nr = ", round(r,3)),
-       xlab = "sans RIN",
-       ylab = "avec RIN")
+            pch = 16,
+            cex = 0.4,
+            main = paste0(l2fc_basic_cols[i],
+                          "\nr = ", round(r,3)),
+            xlab = "sans RIN",
+            ylab = "avec RIN")
   
   abline(0,1,col="red", lwd=2)
   plot[[i]] <- p
@@ -223,11 +209,14 @@ delta_matrix <- counts_RIN[, l2fc_RIN_cols] -
 rownames(delta_matrix) <- counts_basic$MGI.symbol
 
 mean_delta <- rowMeans(delta_matrix, na.rm = TRUE)
+max_abs_delta <- apply(abs(delta_matrix), 1, max, na.rm = TRUE)
 
 result_delta <- data.frame(
   Geneid = rownames(delta_matrix),
   mean_delta_LFC = mean_delta,
-  abs_mean_delta_LFC = abs(mean_delta)
+  abs_mean_delta_LFC = abs(mean_delta),
+  max_abs_delta = max_abs_delta
+  
 )
 result_delta <- result_delta[order(-result_delta$abs_mean_delta_LFC), ]
 
@@ -239,10 +228,33 @@ boxplot(RIN ~ group, data = coldata,
 wilcox.test(RIN ~ group, data = coldata)
 
 
-boxplot(RIN ~ group + reg, data = coldata)
+ggplot(coldata, aes(x = interaction(group, reg),
+                    y = RIN,
+                    fill = group)) +
+  geom_boxplot() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 interaction.plot(coldata$group,
                  coldata$reg,
                  coldata$RIN)
 
-anova(lm(RIN ~ group + reg + timepoint, data = coldata))
+# anova(lm(RIN ~ group + reg + timepoint, data = coldata))  # faux, faudrait rajouter l'interaction mais ca devint ininterpretable 
+
+
+
+# Voir les gènes qui changent de significativité 
+pval_basic <- counts_basic[, grep("_pval_tp", colnames(counts_basic))]
+pval_RIN   <- counts_RIN[, grep("_pval_tp", colnames(counts_RIN))]
+rownames(pval_basic) <- counts_basic$MGI.symbol
+rownames(pval_RIN)   <- counts_RIN$MGI.symbol
+
+sig_switch <- (pval_basic < 0.05) != (pval_RIN < 0.05)
+genes_switch <- rownames(sig_switch)[
+  rowSums(sig_switch, na.rm = TRUE) > 0
+]
+switch_df <- as.data.frame(sig_switch)
+switch_df$MGI.symbol <- rownames(sig_switch)
+switch_df$nb_switch <- rowSums(sig_switch, na.rm = TRUE)
+
+switch_df <- switch_df[switch_df$nb_switch > 0, ]
