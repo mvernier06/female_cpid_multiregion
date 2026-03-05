@@ -25,6 +25,7 @@ ijw <- calculate.correlation(logCPM_corrected,
                              doPerm = cor.perm,
                              output.corTable = FALSE,
                              output.permFDR = FALSE)
-
+cat("Objects before save:\n")
+print(ls())
 # save correlation matrix
 save(ijw, file=output.path)

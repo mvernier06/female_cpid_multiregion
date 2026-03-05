@@ -37,5 +37,8 @@ el <- calculate.PFN(ijw[,1:3],
 # graph dataframe
 g <- graph.data.frame(el,directed = FALSE)
 
+cat("Objects before save:\n")
+print(ls())
+
 # save PFN
 save(g, file=output.path)

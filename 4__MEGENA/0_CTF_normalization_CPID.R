@@ -49,6 +49,8 @@ for(reg in regionlist){
                                         covariates = cldata_region$RIN,
                                         design = design)
   
+  cat("Objects before save:\n")
+  print(ls())
   # save R object of normalized counts
   filename <- paste0("logCPM_RINcorrected_", reg, ".Rdata")
   save(logCPM_corrected, file = paste0(output.path, filename))
