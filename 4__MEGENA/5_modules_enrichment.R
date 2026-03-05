@@ -1,4 +1,3 @@
-### Les scripts précédents ont été éxécuté sur le cluster, les .Rdata ont été copier manuellement ###
 ### Le script a été éxécuté dans un environnement conda R4.4 pour faire fonctionner GeneOverlap ###
 
 rm(list = ls()) # rm R working space
@@ -9,12 +8,12 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("GeneOverlap") 
 
 # MEGENA
-install.packages("MEGENA")  # ou devtools::install_github("jasonbian97/MEGENA")
+install.packages("MEGENA", repos = "https://cloud.r-project.org")  # ou devtools::install_github("jasonbian97/MEGENA")
 library(tidyverse)
 library(GeneOverlap)
 library(MEGENA)
 
-setwd("/home/marinevernier/Documents/projets/female_cpid_multiregion/")
+setwd("/home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/")
 
 # Choose a region (case sensitive: ACC - Hb - Ins - Nac)
 reg <- "ACC"
