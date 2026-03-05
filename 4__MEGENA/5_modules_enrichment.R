@@ -7,18 +7,18 @@ library(MEGENA)
 setwd("/home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/")
 
 # Choose a region (case sensitive: ACC - Hb - Ins - Nac)
-reg <- "Hb"
+reg <- "ACC"
 
 
 #### PATHS ####
 alluvial_patterns.path <- paste0("data/2__differential_expression_analysis/alluvial_patterns_", reg, ".Rdata")
-megena_results.path <- paste0("data/4__MEGENA/MEGENA_results/MEGENA.Results_", reg, ".Rdata")
-modtable.path <- paste0("data/4__MEGENA/modtable/modtable_", reg, ".Rdata")
+megena_results.path <- paste0("data/4__MEGENA/MEGENA.Results_", reg, ".Rdata")
+modtable.path <- paste0("data/4__MEGENA/modtable_", reg, ".Rdata")
 deglist.path <- "data/2__differential_expression_analysis/deglist.Rdata"
-brain_cell_markers.path <- "data/TR_Cell_markers_for_MEGENA_annotation/Barres_lab_Cell-specific_genes_MG_21Nov2023.xlsx"
+brain_cell_markers.path <- "data/4__MEGENA/TR_Cell_markers_for_MEGENA_annotation/Barres_lab_Cell-specific_genes_MG_21Nov2023.xlsx"
 output.path <- "data/4__MEGENA/"
 
-
+print(paste0("Running module enrichment for region: ", reg))
 #### alluvial patterns enrichment in modules ####
 load(alluvial_patterns.path)
 load(megena_results.path)
@@ -47,13 +47,24 @@ pattern_list <- unique(patterns$diffexpressed_alltp)
 module_list <- summary.output$modules
 
 total.genes <- vcount(g) # Make this the total number of genes across all modules (size of the biggest module)
+print(paste0("Total number of genes across all modules: ", total.genes))
 length(MEGENA.output$module.output)
 modtable
 
 for(pattern in pattern_list){
+  print(paste0("Processing pattern: ", pattern))
   overlapgenes <- get(pattern)
   overlaplist <- list()
   overlaplist[["genes"]] <- overlapgenes
+
+  print(head(overlapgenes))
+  print(length(overlapgenes))
+  print(sum(is.na(overlapgenes)))
+  class(overlapgenes)
+
+  print("Module liste")
+  print(length(module_list))
+
   
   Object <- newGOM(overlaplist, module_list, total.genes)
   
@@ -71,14 +82,16 @@ for(pattern in pattern_list){
 }
 save(list=ls()[grepl("alluvial_enrichment",ls())],
      file=paste0(output.path, "enrichment_alluvial/enrichment_alluvial_", reg, ".Rdata"))
-
+print("Finished alluvial patterns enrichment in modules.")
 
 
 
 #### DEG enrichment in modules ####
+print("Starting DEG enrichment in modules.")
 load(deglist.path)
 tplist <- c("tp1", "tp2", "tp3")
 for(tp in tplist){
+  print(paste0("Processing time point: ", tp))
   degtp <- get(paste0("deg_", reg, "_", tp))
   degs <- degtp$label
   DEGs <- list()
@@ -98,7 +111,7 @@ for(tp in tplist){
 }
 save(list=ls()[grepl("deg_enrichment",ls())], 
      file=paste0(output.path, "enrichment_DEGs/enrichment_degs_", reg, ".Rdata"))
-
+print("Finished DEG enrichment in modules.")
 
 
 
@@ -106,10 +119,12 @@ save(list=ls()[grepl("deg_enrichment",ls())],
 library(readxl)
 brain_cell_markers <- read_excel(brain_cell_markers.path,
                                  sheet = "genes_>5fpkm_enrichment")
-
+print("Loaded brain cell markers.")
 for(cell_type in colnames(brain_cell_markers)){
   genelist <- list()
-  genelist[["genes"]] <- get(cell_type, brain_cell_markers)
+  genelist[["genes"]] <- na.omit(brain_cell_markers[[cell_type]]) # rajouter na.omit au lieu de get 
+  length(genelist[[1]])
+  head(genelist[[1]])
   
   Object <- newGOM(genelist, module_list, total.genes)
   
@@ -128,3 +143,4 @@ for(cell_type in colnames(brain_cell_markers)){
 save(list=c("Astrocytes_more_than_5_fpkm", "Neuron_more_than_5_fpkm", "Myelinating.Oligodendrocytes_more_than_5_fpkm", 
             "Microglia_more_than_5_fpkm", "Endothelial.Cells_more_than_5_fpkm"),
      file=paste0(output.path, "enrichment_cell_types/enrichment_cell_types_", reg, ".Rdata"))
+print("Finished cell type enrichment in modules.")
