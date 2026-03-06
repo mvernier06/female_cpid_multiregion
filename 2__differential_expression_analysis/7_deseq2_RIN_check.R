@@ -13,7 +13,7 @@ raw_counts.path <- "female_cpid_multiregion/data/counts_m39_M32/cpid_multireg_co
 coldata.path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods"
 annot_table.path <- "female_cpid_multiregion/data/counts_m39_M32/annotation_final.csv"
 
-setwd("/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/1__count_matrix_operation/quality_check/")
+
 
 #### Formatting raw counts ####
 raw_counts <- read.table(raw_counts.path, header = TRUE,
@@ -57,6 +57,8 @@ outliers <- c("Ins.1837", "Nac.1837", "Hb.1839", "Hb.2049")
 coldata <- coldata %>%
   filter(!sample %in% outliers)
 raw_counts <- raw_counts[, coldata$sample, drop = FALSE]
+
+
 
 #### Differential expression analysis of sham vs cuff  with RIN ####
 Deseq2MultiReg_RIN <- function(regionList, tpList){
@@ -157,6 +159,8 @@ counts_basic <- inner_join(counts_basic, ens2symbol, by=c("Geneid"="Gene.stable.
 counts_basic <- counts_basic %>% relocate(MGI.symbol, .before=Geneid) 
 counts_basic <- counts_basic[!duplicated(counts_basic$MGI.symbol),]
 
+
+setwd("/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/1__count_matrix_operation/quality_check/")
 
 # Colonnes log2FC
 l2fc_basic_cols <- grep("_log2fc_tp", colnames(counts_basic), value = TRUE)
