@@ -2,7 +2,7 @@
 
 rm(list = ls()) # rm R working space
 if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager", version = '3.17')
+    install.packages("BiocManager", version = '3.17', repos = "https://cloud.r-project.org")
 
 # GeneOverlap 1.40
 BiocManager::install("GeneOverlap") 
@@ -16,7 +16,7 @@ library(MEGENA)
 setwd("/home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/")
 
 # Choose a region (case sensitive: ACC - Hb - Ins - Nac)
-reg <- "ACC"
+reg <- "Ins"
 
 
 #### PATHS ####
@@ -34,27 +34,7 @@ load(megena_results.path)
 load(modtable.path)
 
 patterns <- df_new %>% select(MGI.symbol, diffexpressed_alltp)
-genes_per_patterns <- aggregate(MGI.symbol~difor(pattern in pattern_list){
-  overlapgenes <- get(pattern)
-  overlaplist <- list()
-  overlaplist[["genes"]] <- overlapgenes
-
-  Object <- newGOM(overlaplist, module_list, total.genes)
-  
-  overlap.intersect <- getMatrix(Object, name="intersection")
-  overlap.intersect.list <- getNestedList(Object, name="intersection")
-  overlap.pval <- getMatrix(Object, name="pval")
-  overlap.OR <- getMatrix(Object, name="odds.ratio")
-  Overlap.sum <- cbind(overlap.intersect,overlap.pval,overlap.OR, overlap.intersect.list)
-  Overlap.sum <- data.frame(Overlap.sum)
-  Overlap.sum <- Overlap.sum %>% arrange(overlap.pval)
-  
-  assign(paste0("alluvial_enrichment_", pattern), Overlap.sum, envir = .GlobalEnv)
-  # write.csv(Overlap.sum, file=paste0("~/Rcode/megena/enrichment_", 
-  #                                    overlap, "_drn.csv"))
-}
-save(list=ls()[grepl("alluvial_enrichment",ls())],
-     file=paste0(output.path, "enrichment_alluvial/enrichment_alluvial_", reg, ".Rdata"))ffexpressed_alltp, data=patterns, FUN = function(x) paste0(x,collapse = '; '))
+genes_per_patterns <- aggregate(MGI.symbol~diffexpressed_alltp, data=patterns, FUN = function(x) paste0(x,collapse = '; '))
 genes_per_patterns
 
 data <- genes_per_patterns
@@ -76,16 +56,14 @@ pattern_list <- unique(patterns$diffexpressed_alltp)
 module_list <- summary.output$modules
 
 total.genes <- vcount(g) # Make this the total number of genes across all modules (size of the biggest module)
-print(paste0("Total number of genes across all modules: ", total.genes))
-# modtable
-
-
+length(MEGENA.output$module.output)
+modtable
 
 for(pattern in pattern_list){
   overlapgenes <- get(pattern)
   overlaplist <- list()
   overlaplist[["genes"]] <- overlapgenes
-
+  
   Object <- newGOM(overlaplist, module_list, total.genes)
   
   overlap.intersect <- getMatrix(Object, name="intersection")
