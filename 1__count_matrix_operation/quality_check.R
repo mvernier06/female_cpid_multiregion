@@ -8,14 +8,14 @@ library(ggpubr)
 
 rm(list=ls())
 
-project_path <- "/home/marinevernier/Documents/projets/"
+project_path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion"
 setwd(project_path)
 
 #### PATHS ####
-raw_counts_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv" # attention, il n'y a pas les outliers 
-coldata_path <- "female_cpid_multiregion/data/counts_m39_M32/coldata.ods"
-plot.path <- "female_cpid_multiregion/graphs_results/1__count_matrix_operation/quality_check/"
-coverage.path <- "female_cpid_multiregion/data/counts_m39_M32/coverage_per_sample.tsv"
+raw_counts_path <- "data/2__differential_expression_analysis/raw_counts_filtered_allreg_union.csv" # attention, il n'y a pas les outliers 
+coldata_path <- "data/counts_m39_M32/coldata.ods"
+plot.path <- "graphs_results/1__count_matrix_operation/quality_check/"
+coverage.path <- "data/counts_m39_M32/coverage_per_sample.tsv"
 
 
 counts <- read_csv(raw_counts_path)
@@ -129,7 +129,7 @@ ggplot(cor_df, aes(x = PC, y = correlation, fill = significant)) +
 
 ggsave(plot=last_plot(), "spearman_correlation_RIN_PCA_without_outlier.png")
 
-summary(lm(PC1 ~ RIN, data = scores))
+summary(lm(PC1 ~ RIN + reg + group + timepoint, data = scores))
 
 
   
@@ -197,7 +197,7 @@ p <- ggplot(coldata, aes(x = reg, y = RIN, fill = reg)) +
     hide.ns = TRUE
   ) +
   
-  facet_grid(group ~ timepoint) +
+  facet_grid( group ~ timepoint) + # group ~ timepoint
   
   scale_fill_brewer(palette = "Set2") +
   theme_classic(base_size = 14) +
@@ -208,7 +208,7 @@ p <- ggplot(coldata, aes(x = reg, y = RIN, fill = reg)) +
     y = "RIN"
   )
 p
-
+ggsave(plot = last_plot(), "pairwise_comparison_RIN_across_reg_timepoint_group.png")
 coldata$cond <- interaction(coldata$reg, coldata$group, coldata$timepoint)
 
 comparisons <- combn(unique(coldata$cond), 2, simplify = FALSE)
