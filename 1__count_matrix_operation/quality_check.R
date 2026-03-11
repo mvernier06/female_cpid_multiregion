@@ -129,10 +129,9 @@ ggplot(cor_df, aes(x = PC, y = correlation, fill = significant)) +
 
 ggsave(plot=last_plot(), "spearman_correlation_RIN_PCA_without_outlier.png")
 
+anova(lm(PC1 ~ RIN * reg + group + timepoint, data = scores))
 summary(lm(PC1 ~ RIN + reg + group + timepoint, data = scores))
 
-
-  
 ggplot(scores, aes(x = RIN, y = PC1)) + # , color = reg
   geom_point(size = 3, alpha = 0.8) +
   # geom_smooth(method = "lm", se = TRUE, color = "red") +
