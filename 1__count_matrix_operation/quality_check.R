@@ -144,6 +144,19 @@ ggplot(scores, aes(x = RIN, y = PC1)) + # , color = reg
 
 ggsave("PC1_vs_RIN_scatter.png", width = 6, height = 5)
 
+ggplot(scores, aes(RIN, PC1, color=reg)) +
+  geom_point() +
+  labs(
+    title = "PC1 projection according to RIN score",
+    x = "RIN",
+    y = "PC1 score"
+  ) +
+  geom_smooth(method="lm")
+ggsave(plot=last_plot(), "PC1_vs_RIN_linear_regression.png")
+
+anova(lm(RIN ~ reg * group, data=coldata))
+
+
 ###############################################################################################
 ### Etude du RIN pour region ###
 
