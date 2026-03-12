@@ -66,7 +66,6 @@ ens2symbol <- read.csv(annot_table.path, sep=";")
 ens2symbol <- ens2symbol %>% dplyr::select(!X)
 filtered_counts <- readRDS(filtered_counts.path)
 
-
 for (tp in c("1", "2", "3")){
   ### TP SELECTION IN COLDATA ### 
   
