@@ -364,7 +364,8 @@ for(tp in tplist){
   color_scale <- scale_color_manual(
     name = "Module enrichment",
     values = c(
-      "enriched in DEGs" = "red"
+      "enriched in DEGs" = "red", 
+      "NS" = NA
     )
   )
   
