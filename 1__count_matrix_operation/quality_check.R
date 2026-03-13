@@ -239,3 +239,22 @@ ggplot(coldata, aes(x = cond, y = RIN, fill = reg)) +
   
   theme_classic() +
   labs(x = "Region / Group / Timepoint")
+
+####################################################################################################################
+### Test de GLM-PCA ###
+
+outliers <- c("Ins.1837", "Nac.1837", "Hb.1839", "Hb.2049")
+coldata <- coldata %>%
+  filter(!sample %in% outliers)
+print(coldata$sample==colnames(counts))
+
+library("glmpca")
+gpca <- glmpca(counts, L=2)
+gpca.dat <- gpca$factors
+gpca.dat$group <- coldata$group
+gpca.dat$reg <- coldata$reg
+gpca.dat$timepoint <- coldata$timepoint
+gpca.dat$RIN <- coldata$RIN
+
+ggplot(gpca.dat, aes(x = dim1, y = dim2, color = RIN, shape = group)) +
+  geom_point(size =3) + coord_fixed() + ggtitle("glmpca - Generalized PCA")
