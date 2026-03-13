@@ -37,12 +37,12 @@ counts$MGI.symbol <- NULL
 vst_counts <- varianceStabilizingTransformation(as.matrix(counts))
 
 # PCA classique
-pca_res <- prcomp(t(vst_counts), scale. = TRUE)
-
+pca_res <- prcomp(t(vst_counts))
+ 
 pca_df <- as.data.frame(pca_res$x) %>%
   rownames_to_column("sample") %>%
   left_join(
-    coldata %>% select(sample, timepoint, group, RIN),
+    coldata %>% select(sample, timepoint, group, RIN, reg),
     by = "sample"
   )
 
@@ -127,7 +127,7 @@ ggplot(cor_df, aes(x = PC, y = correlation, fill = significant)) +
   theme_minimal() +
   theme(legend.position = "none")
 
-ggsave(plot=last_plot(), "spearman_correlation_RIN_PCA_without_outlier.png")
+ggsave(plot=last_plot(), "spearman_correlation_RIN_PCA_without.png")
 
 anova(lm(PC1 ~ RIN * reg + group + timepoint, data = scores))
 summary(lm(PC1 ~ RIN + reg + group + timepoint, data = scores))
