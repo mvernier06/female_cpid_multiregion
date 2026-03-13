@@ -328,7 +328,8 @@ network_plot(Neuron_more_than_5_fpkm, "neurons")
 deg_enrichment.path <- paste0("data/4__MEGENA/enrichment_DEGs/enrichment_degs_", reg, ".Rdata")
 load(deg_enrichment.path)
 plots.path <-paste0("graphs_results/4__MEGENA/",reg, "/DEG_network_plot_", reg, "/")
-
+modtable.path <- paste0("data/4__MEGENA/modtable_", reg, ".Rdata")
+load(modtable.path)
 tplist <- c("tp1","tp2","tp3")
 
 for(tp in tplist){
