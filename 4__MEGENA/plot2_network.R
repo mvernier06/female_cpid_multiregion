@@ -324,6 +324,109 @@ network_plot(Myelinating.Oligodendrocytes_more_than_5_fpkm, "myelinating_oligode
 network_plot(Neuron_more_than_5_fpkm, "neurons")
 
 
+## Network enrichs en DEG 
+deg_enrichment.path <- paste0("data/4__MEGENA/enrichment_DEGs/enrichment_degs_", reg, ".Rdata")
+load(deg_enrichment.path)
+plots.path <-paste0("graphs_results/4__MEGENA/",reg, "/DEG_network_plot_", reg, "/")
+
+tplist <- c("tp1","tp2","tp3")
+
+for(tp in tplist){
+  
+  print(paste("Processing", tp))
+  
+  init_network()
+  
+  # récupérer table enrichissement
+  df <- get(paste0("deg_enrichment_", reg, "_", tp))
+  
+  df <- df %>%
+    tibble::rownames_to_column("module") %>%
+    mutate(
+      module = str_replace(module, "c1_", "M"),
+      module = str_replace(module, ".DEGs", "")
+    )
+  
+  # modules enrichis
+  enriched_mod   <- df$module[df$overlap.pval < 0.05 & df$overlap.OR > 1]
+  OR_neg <- df$module[df$overlap.pval < 0.05 & df$overlap.OR < 1]
+  
+  # classification des nodes
+  nodes$status <- "NS"
+  nodes$status[nodes$name %in% enriched_mod] <- "enriched in DEGs"
+ 
+  nodes$label <- ifelse(nodes$status == "NS", NA, nodes$name)
+  
+  flareGraph <- graph_from_data_frame(edges, vertices = nodes)
+  
+  title <- paste0("DEG enriched modules - ", reg, " - ", tp)
+  
+  color_scale <- scale_color_manual(
+    name = "Module enrichment",
+    values = c(
+      "enriched in DEGs" = "red"
+    )
+  )
+  
+  #### CIRCULAR NETWORK ####
+  
+  p <- ggraph(flareGraph, 'igraph', algorithm = 'tree', circular = TRUE) + 
+    geom_edge_diagonal(aes(alpha = after_stat(index))) +
+    coord_fixed() + 
+    scale_edge_alpha('Direction', guide = 'none') +
+    geom_node_point(aes(color = status), size = 2) +
+    geom_node_text(aes(label = label),
+                   repel = TRUE,
+                   na.rm = TRUE,
+                   size = 2.5,
+                   max.overlaps = 100,
+                   color = "grey20") +
+    color_scale + 
+    ggforce::theme_no_axes() +
+    ggtitle(title)
+  
+  ggsave(
+    p,
+    filename = paste0(plots.path,
+                      "/network_DEG_",
+                      reg,
+                      "_",
+                      tp,
+                      ".png"),
+    width = 8,
+    height = 8
+  )
+  
+  
+  #### DENDROGRAM VERSION ####
+  
+  p_dendro <- ggraph(flareGraph, 'igraph', algorithm = 'tree', circular = FALSE) + 
+    geom_edge_diagonal(aes(alpha = after_stat(index))) +
+    scale_edge_alpha('Direction', guide = 'none') +
+    geom_node_point(aes(color = status), size = 2) +
+    geom_node_text(aes(label = label),
+                   repel = TRUE,
+                   na.rm = TRUE,
+                   size = 2.5,
+                   max.overlaps = 100,
+                   color = "grey20") +
+    color_scale  +
+    ggforce::theme_no_axes() +
+    ggtitle(title)
+  
+  ggsave(
+    p_dendro,
+    filename = paste0(plots.path,
+                      "/network_DEG_dendrogram_",
+                      reg,
+                      "_",
+                      tp,
+                      ".png"),
+    width = 8,
+    height = 8
+  )
+}
+
 ## plot ENORA
 #init_network()
 ## patterns to color
