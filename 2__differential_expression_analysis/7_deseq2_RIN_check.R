@@ -228,6 +228,62 @@ result_delta <- result_delta[order(-result_delta$max_abs_delta), ]
 
 head(result_delta, 20)
 
+## tester un gène qui change beaucoup 
+raw_counts <- rownames_to_column(raw_counts, "Geneid")
+raw_counts$Geneid <-  str_replace(raw_counts$Geneid, "\\..*", "") 
+raw_counts <- inner_join(raw_counts, ens2symbol, by=c("Geneid"="Gene.stable.ID"))
+raw_counts <- raw_counts %>% relocate(MGI.symbol, .before=Geneid) 
+raw_counts <- raw_counts[!duplicated(raw_counts$MGI.symbol),]
+
+# gène à tester : 
+gene <- c("Gm29999","Gm49105", "AF067063", "Gm24616", "Gm43885", "Snord13")
+plots <- list()
+for (g in gene) {
+  gene_counts <- raw_counts %>%
+    dplyr::filter(MGI.symbol == g) %>%
+    dplyr::select( -Geneid) %>%
+    pivot_longer(
+      cols = -MGI.symbol,
+      names_to = "sample",
+      values_to = "counts"
+    )
+  
+  gene_counts <- gene_counts %>%
+    dplyr::left_join(coldata, by = "sample")
+  p1 <- ggplot(gene_counts, aes(x = reg, y = counts, color = RIN)) +
+    geom_jitter(width = 0.1, size = 3, alpha = 0.8) +
+    scale_color_viridis_c() +
+    theme_classic() +
+    ggtitle(g)
+  
+  p2 <- ggplot(gene_counts, aes(x = RIN, y = counts, color = reg)) +
+    geom_jitter(width = 0.1, size = 3, alpha = 0.8) +
+    theme_classic() +
+    ggtitle(g)
+  plots[[g]] <- list(p1 = p1, p2 = p2)
+}
+
+plots[["Gm29999"]][["p1"]]
+plots[["Gm29999"]][["p2"]]
+
+plots[["Gm49105"]][["p1"]]
+plots[["Gm49105"]][["p2"]]
+
+plots[["AF067063"]][["p1"]]
+plots[["AF067063"]][["p2"]]
+
+plots[["Gm24616"]][["p1"]]
+plots[["Gm24616"]][["p2"]]
+
+plots[["Gm43885"]][["p1"]]
+plots[["Gm43885"]][["p2"]]
+
+plots[["Snord13"]][["p1"]]
+plots[["Snord13"]][["p2"]]
+
+
+
+
 
 ## Facteur confondant : 
 ggplot(coldata, aes(x = group, y = RIN))+
@@ -271,3 +327,4 @@ switch_df$MGI.symbol <- rownames(sig_switch)
 switch_df$nb_switch <- rowSums(sig_switch, na.rm = TRUE)
 
 switch_df <- switch_df[switch_df$nb_switch > 0, ]
+
