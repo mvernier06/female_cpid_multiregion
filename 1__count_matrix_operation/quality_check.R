@@ -129,8 +129,6 @@ ggplot(cor_df, aes(x = PC, y = correlation, fill = significant)) +
 
 ggsave(plot=last_plot(), "spearman_correlation_RIN_PCA_without.png")
 
-anova(lm(PC1 ~ RIN * reg + group + timepoint, data = scores))
-summary(lm(PC1 ~ RIN + reg + group + timepoint, data = scores))
 
 ggplot(scores, aes(x = RIN, y = PC1)) + # , color = reg
   geom_point(size = 3, alpha = 0.8) +
@@ -153,9 +151,6 @@ ggplot(scores, aes(RIN, PC1, color=reg)) +
   ) +
   geom_smooth(method="lm")
 ggsave(plot=last_plot(), "PC1_vs_RIN_linear_regression.png")
-
-anova(lm(RIN ~ reg * group, data=coldata))
-
 
 ###############################################################################################
 ### Etude du RIN pour region ###
