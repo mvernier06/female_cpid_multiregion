@@ -85,6 +85,10 @@ overlap_deg_cell <- function(reg, tplist){
 }
 
 module_enriched_cell_deg_ACC <- overlap_deg_cell("ACC", c("tp1","tp2","tp3"))
+save(module_enriched_cell_deg_ACC, file="data/4__MEGENA/enrichment_cell_types_DEGs/ACC_enrichment_cell_types_deg.Rdata")
 module_enriched_cell_deg_Ins <- overlap_deg_cell("Ins", c("tp1","tp2","tp3"))
+save(module_enriched_cell_deg_Ins, file="data/4__MEGENA/enrichment_cell_types_DEGs/Ins_enrichment_cell_types_deg.Rdata")
 module_enriched_cell_deg_Hb <- overlap_deg_cell("Hb", c("tp1","tp2","tp3"))
+save(module_enriched_cell_deg_Hb, file="data/4__MEGENA/enrichment_cell_types_DEGs/Hb_enrichment_cell_types_deg.Rdata")
 module_enriched_cell_deg_Nac <- overlap_deg_cell("Nac", c("tp1","tp2","tp3"))
+save(module_enriched_cell_deg_Nac, file="data/4__MEGENA/enrichment_cell_types_DEGs/Nac_enrichment_cell_types_deg.Rdata")
