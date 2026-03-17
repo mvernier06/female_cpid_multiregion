@@ -1,0 +1,1 @@
+rm(list = ls()) # rm R working space
