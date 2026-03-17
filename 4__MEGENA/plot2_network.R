@@ -324,7 +324,7 @@ network_plot(Myelinating.Oligodendrocytes_more_than_5_fpkm, "myelinating_oligode
 network_plot(Neuron_more_than_5_fpkm, "neurons")
 
 
-## Network enrichs en DEG 
+## Network enrichis en DEG 
 deg_enrichment.path <- paste0("data/4__MEGENA/enrichment_DEGs/enrichment_degs_", reg, ".Rdata")
 load(deg_enrichment.path)
 plots.path <-paste0("graphs_results/4__MEGENA/",reg, "/DEG_network_plot_", reg, "/")
@@ -428,6 +428,125 @@ for(tp in tplist){
     height = 8
   )
 }
+
+# Network enrichis en DEGs + cell types 
+deg_cell_types_enrichment.path <- paste0("data/4__MEGENA/enrichment_cell_types_DEGs/", reg, "_enrichment_cell_types_deg.Rdata")
+load(deg_cell_types_enrichment.path)
+modtable.path <- paste0("data/4__MEGENA/modtable_", reg, ".Rdata")
+load(modtable.path)
+plot.path <- paste0("graphs_results/4__MEGENA/", reg, "/cell_types_DEG_enrichment_network_plot/")
+dir.create(plot.path)
+
+tplist <- c("tp1","tp2","tp3")
+
+for(tp in tplist){
+  
+  print(paste("Processing", tp))
+  
+  init_network()
+  
+  # récupérer table enrichissement
+  df <- get(paste0("module_enriched_cell_deg_",reg))
+  
+  df <- df %>%
+    mutate(
+      module = str_replace(module, "c1_", "M"), 
+      cell_type = str_replace(cell_type, "_more_than_5_fpkm", "")
+    ) %>%
+    filter(timepoint == tp)
+  
+  
+  # classification des nodes
+  nodes$status <- "NS"
+  for (type in unique(df$cell_type)) {
+    df_type <- df %>% filter(cell_type==type)
+    
+    nodes$status[nodes$name %in% df_type$module] <- paste0("DEGs ", tp, " and ", type)
+  }
+  
+  nodes$label <- ifelse(nodes$status == "NS", NA, nodes$name)
+  
+  flareGraph <- graph_from_data_frame(edges, vertices = nodes)
+  
+  title <- paste0("DEG and cell type enriched modules - ", reg, " - ", tp)
+  
+  color_scale <- scale_color_manual(
+    name = "Module enrichment",
+    values = setNames(
+      c("yellow3", "red", "pink", "purple", "blue", NA),
+      c(
+        paste0("DEGs ", tp, " and Astrocytes"),
+        paste0("DEGs ", tp, " and Endothelial.Cells"),
+        paste0("DEGs ", tp, " and Microglia"),
+        paste0("DEGs ", tp, " and Myelinating.Oligodendrocytes"),
+        paste0("DEGs ", tp, " and Neuron"),
+        "NS"
+      )
+    ),
+    na.value = NA
+  )
+  
+  #### CIRCULAR NETWORK ####
+  
+  p <- ggraph(flareGraph, 'igraph', algorithm = 'tree', circular = TRUE) + 
+    geom_edge_diagonal(aes(alpha = after_stat(index))) +
+    coord_fixed() + 
+    scale_edge_alpha('Direction', guide = 'none') +
+    geom_node_point(aes(color = status), size = 2) +
+    geom_node_text(aes(label = label),
+                   repel = TRUE,
+                   na.rm = TRUE,
+                   size = 2.5,
+                   max.overlaps = 100,
+                   color = "grey20") +
+    color_scale + 
+    ggforce::theme_no_axes() +
+    ggtitle(title)
+  
+  ggsave(
+    p,
+    filename = paste0(plot.path,
+                      "/network_DEG_cell_type_",
+                      reg,
+                      "_",
+                      tp,
+                      ".png"),
+    width = 8,
+    height = 8
+  )
+  
+  
+  #### DENDROGRAM VERSION ####
+  
+  p_dendro <- ggraph(flareGraph, 'igraph', algorithm = 'tree', circular = FALSE) + 
+    geom_edge_diagonal(aes(alpha = after_stat(index))) +
+    scale_edge_alpha('Direction', guide = 'none') +
+    geom_node_point(aes(color = status), size = 2) +
+    geom_node_text(aes(label = label),
+                   repel = TRUE,
+                   na.rm = TRUE,
+                   size = 2.5,
+                   max.overlaps = 100,
+                   color = "grey20") +
+    color_scale  +
+    ggforce::theme_no_axes() +
+    ggtitle(title)
+  
+  ggsave(
+    p_dendro,
+    filename = paste0(plot.path,
+                      "/network_DEG_cell_type_dendrogram_",
+                      reg,
+                      "_",
+                      tp,
+                      ".png"),
+    width = 8,
+    height = 8
+  )
+}
+
+
+
 
 ## plot ENORA
 #init_network()
