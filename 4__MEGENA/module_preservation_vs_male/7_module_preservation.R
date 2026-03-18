@@ -134,6 +134,70 @@ ggplot(res_refMale, aes(x = Zsummary)) +
 plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/",reg,"/preservation_vs_male/distribution_Zsummary_refMale.png")
 ggsave(plot=last_plot(), filename=plot_name)
 
+#########################
+## Now with female ref ##
+#########################
+
+mp_refFemale <- modulePreservation(
+  multiExpr,
+  colorList,
+  referenceNetworks = 2,  # female = référence
+  nPermutations = 100,
+  randomSeed = 123,
+  verbose = 3
+)
+
+pres_refFemale <- mp_refFemale$preservation$Z$ref.male$inColumnsAlsoPresentIn.female
+obs_refFemale  <- mp_refFemale$preservation$observed$ref.male$inColumnsAlsoPresentIn.female
+
+res_refFemale <- data.frame(
+  module = rownames(pres_refMale),
+  Zsummary = pres_refMale[, "Zsummary.pres"],
+  medianRank = obs_refMale[, "medianRank.pres"],
+  size = obs_refMale[, "moduleSize"],
+  density = pres_refMale[, "Zdensity.pres"]
+)
+
+head(res_refFemale)
+filename <- paste0("female_cpid_multiregion/data/4__MEGENA/preservation_vs_male/",reg,"/", reg, "_modulePreservation_refFemale.Rdata")
+save(res_refFemale, file = filename)
+
+ggplot(res_refFemale, aes(x = size, y = Zsummary)) +
+  geom_point() +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  geom_hline(yintercept = 10, linetype = "dashed") +
+  labs(
+    title = "Module preservation",
+    x = "Module size",
+    y = "Zsummary"
+  ) +
+  theme_minimal()
+plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/",reg,"/preservation_vs_male/Zsummary_size_refFemale.png")
+ggsave(plot=last_plot(), filename = plot_name)
+
+ggplot(res_refFemale, aes(x = Zsummary)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "black") +
+  geom_density(fill = "skyblue", alpha = 0.5) +
+  geom_vline(xintercept = 2, linetype = "dashed", color = "orange") +
+  geom_vline(xintercept = 10, linetype = "dashed", color = "red") +
+  labs(
+    title = "Distribution du Zsummary (préservation femelle vs mâle)",
+    x = "Zsummary",
+    y = "Nombre de modules"
+  ) +
+  theme_minimal()
+plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/",reg,"/preservation_vs_male/distribution_Zsummary_refFemale.png")
+ggsave(plot=last_plot(), filename=plot_name)
+
+res_refMale$sex_direction <- "Male reference"
+res_refFemale$sex_direction <- "Female reference"
+
+df <- rbind(res_refMale, res_refFemale)
+
+ggplot(df, aes(x = Zsummary, fill = sex_direction)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "Comparaison des distributions de Zsummary") +
+  theme_minimal()
 
 #############################################################################################################
 ### tentative avec raw_counts ###
