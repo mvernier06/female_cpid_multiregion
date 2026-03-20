@@ -1,18 +1,21 @@
 rm(list = ls()) # rm R working space
 
 # BiocManager::install(c("impute", "preprocessCore"))
-# install.packages("WGCNA")
+# install.packages("WGCNA",repos = "https://cloud.r-project.org")
 
 library(WGCNA)
 library(tidyverse)
 
-project.path <- "/home/marinevernier/Documents/projets/"
+project.path <- "/home2020/home/inci/mvernier/cpid_multireg_female/"
 setwd(project.path)
 
-reg <- "Hb"
+reg <- "Ins"
+reg_male <- "Ins"
 
-male_modules.path <- paste0("cpid_multiregion/data/4__MEGENA/MEGENA_results/MEGENA.Results_", reg, ".Rdata")
-male_counts.path <- paste0("cpid_multiregion/data/4__MEGENA/CTF_normalized_counts_",reg,".Rdata")
+print(paste0("Région : ", reg))
+
+male_modules.path <- paste0("male_cpid_multiregion/data/4__MEGENA/MEGENA_results/MEGENA.Results_", reg_male, ".Rdata")
+male_counts.path <- paste0("male_cpid_multiregion/data/4__MEGENA/CTF_normalized_counts_",reg_male,".Rdata")
 
 female_modules.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA.Results_", reg, ".Rdata")
 female_counts.path <- paste0("female_cpid_multiregion/data/4__MEGENA/logCPM_RINcorrected_",reg,".Rdata")
@@ -38,8 +41,10 @@ female_counts <- logCPM_corrected
 
 output_data <- paste0("female_cpid_multiregion/data/4__MEGENA/preservation_vs_male/",reg,"/")
 dir.create(output_data)
+print(paste0("Data will be saved in : ", output_data))
 output_graph <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/",reg,"/preservation_vs_male/")
 dir.create(output_graph)
+print(paste0("Graphs will be saved in : ", output_graph))
 
 
 MEGENA_to_moduleColors <- function(module_list) {
@@ -83,10 +88,11 @@ multiExpr <- list(
 
 colorList <- list(male = moduleColors_male)
 
+print("Calcul de la préservation des modules avec les males comme référence")
 mp_refMale <- modulePreservation(
   multiExpr,
   colorList,
-  referenceNetworks = 1,  # male = référence
+  referenceNetworks = 1,  # male = référence : on teste si les gènes des modules males sont aussi connectés dans les counts femelles 
   nPermutations = 100,
   randomSeed = 123,
   verbose = 3
@@ -137,25 +143,27 @@ ggsave(plot=last_plot(), filename=plot_name)
 #########################
 ## Now with female ref ##
 #########################
+print("Calcul de la préservation des modules avec les femelles comme référence")
+colorList_female <- list(female = moduleColors_female)
 
 mp_refFemale <- modulePreservation(
   multiExpr,
-  colorList,
-  referenceNetworks = 2,  # female = référence
-  nPermutations = 100,
+  colorList_female,
+  referenceNetworks = 2, # female reference : donc on teste si les gènes des modules femelles sont aussi connecté dans les counts males 
+  nPermutations = 100, 
   randomSeed = 123,
   verbose = 3
 )
 
-pres_refFemale <- mp_refFemale$preservation$Z$ref.male$inColumnsAlsoPresentIn.female
-obs_refFemale  <- mp_refFemale$preservation$observed$ref.male$inColumnsAlsoPresentIn.female
+pres_refFemale <- mp_refFemale$preservation$Z$ref.female$inColumnsAlsoPresentIn.male
+obs_refFemale  <- mp_refFemale$preservation$observed$ref.female$inColumnsAlsoPresentIn.male
 
 res_refFemale <- data.frame(
-  module = rownames(pres_refMale),
-  Zsummary = pres_refMale[, "Zsummary.pres"],
-  medianRank = obs_refMale[, "medianRank.pres"],
-  size = obs_refMale[, "moduleSize"],
-  density = pres_refMale[, "Zdensity.pres"]
+  module = rownames(pres_refFemale),
+  Zsummary = pres_refFemale[, "Zsummary.pres"],
+  medianRank = obs_refFemale[, "medianRank.pres"],
+  size = obs_refFemale[, "moduleSize"],
+  density = pres_refFemale[, "Zdensity.pres"]
 )
 
 head(res_refFemale)

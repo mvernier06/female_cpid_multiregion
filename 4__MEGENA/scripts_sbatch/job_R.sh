@@ -1,6 +1,7 @@
 #! /bin/bash
 #SBATCH --time=0-24:00:00
 #SBATCH -p public
+# SBATCH -p grant -A g2025a419c
 #SBATCH --output=run_R_job%J.out
 #SBATCH --error=run_R_job%J.err
 #SBATCH --mail-type=END  
@@ -10,7 +11,7 @@
 
 # Mettre 32 cpus pour 2_pfn, 10 pour 3_mca, 1 pour les autres 
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
+#SBATCH --mem=10G
 
 # Configuration de l'environnement
 source $(conda info --base)/etc/profile.d/conda.sh
@@ -20,7 +21,7 @@ checktime=$(date);
 echo "start time $checktime";
 
 # Run the R script
-Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/plot2_network.R Nac
+Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/module_preservation_vs_male/7_module_preservation.R
 checktime=$(date);
 echo "end time $checktime"; 
 
