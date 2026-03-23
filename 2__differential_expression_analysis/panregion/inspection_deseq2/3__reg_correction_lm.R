@@ -7,6 +7,7 @@ library(tidyverse)
 library(DESeq2)
 library(variancePartition)
 library(readODS)
+library(reformulas)
 
 #### PATHS #### 
 project.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/"
@@ -86,65 +87,63 @@ for (tp in tp_list) {
   #### LINEAR MODEL FUCNTION #### 
   correct_expression_data <- function(count_matrix, metadata) {
     
-    # Ensure sample IDs match between count matrix and metadata 
+    # Vérifier correspondance samples
     if (!all(colnames(count_matrix) %in% metadata$sample)) {
       stop("Sample IDs in count matrix and metadata don't match")
     }
     
-    # Create DESeqDataSet object
-    dds <- DESeqDataSetFromMatrix (
+    # Réordonner metadata
+    metadata <- metadata[match(colnames(count_matrix), metadata$sample), ]
+    
+    # DESeq2 object (pour VST uniquement)
+    dds <- DESeqDataSetFromMatrix(
       countData = count_matrix,
       colData = metadata,
-      design = ~1  # Using a minimal design formula for VST
+      design = ~1
     )
     
-    # Apply variance stabilizing transformation
+    # VST transformation
     vst_data <- vst(dds, blind = TRUE)
     vst_matrix <- assay(vst_data)
     
-    # Prepare data for linear model
-    # Transpose the VST matrix so samples are rows
-    vst_t <- t(vst_matrix)
+    # Correction batch + covariate en protégeant group
+    corrected <- removeBatchEffect(
+      vst_matrix,
+      batch = metadata$reg,
+      covariates = metadata$RIN,
+      design = model.matrix(~ group, data = metadata)
+    )
     
-    # Create empty matrix to store residuals
-    corrected_data <- matrix(NA,
-                             nrow = ncol(count_matrix),
-                             ncol = nrow(count_matrix))
-    
-    # Fit linear model for each gene and extract residuals
-    for (i in 1:ncol(vst_t)) {
-      model <- lm(vst_t[, i] ~ reg, data = metadata)
-      corrected_data[, i] <- residuals(model)
-    }
-    
-    # Set proper row and column names
-    rownames(corrected_data) <- colnames(count_matrix)
-    colnames(corrected_data) <- rownames(count_matrix)
-    
-    # Transpose back to original orientation (genes as rows)
-    corrected_data <- t(corrected_data)
-    
-    return(corrected_data)
+    return(corrected)
   }
   
-  #### USE THE FUNCTION #### 
+
   corrected_matrix <- correct_expression_data(df_rawcounts_tp, metadata_tp)
+  
   saveRDS(corrected_matrix, data.path)
   
+    
+  info <- metadata_tp %>%tibble::column_to_rownames(var = "sample")
   
-  #### VARIATION PARTITION ON LM RESIDUALS ####
-  # Formula for VariancePartition
-  formula <- ~ RIN + (1 | reg) + (1 | group) 
+  # Vérifier alignement
+  stopifnot(all(colnames(corrected_matrix) == rownames(info)))
   
-  # Convert All_metadata into a data frame with rownames matching the SampleID
-  info <-  metadata_tp%>% tibble::column_to_rownames(var = "sample")
+  # Modèle cohérent avec données corrigées
+  formula <- ~ RIN + (1 | reg) + (1 | group)
   
-  ## RUN VARIANCE PARTITION ##
   varPart <- fitExtractVarPartModel(corrected_matrix, formula, info)
   
   #### SAVE ####
-  title <- paste0("Variance Partition on LM residuals tp", tp)
-  plot <- plotVarPart(varPart) + ggtitle(title)
-  ggsave(plot.path, plot = plot, bg="white", width=1500, height=1000, units="px", scale=2)
+  title <- paste0("Variance Partition (corrected reg + RIN) tp", tp)
+  
+  plot <- plotVarPart(varPart) + 
+    ggtitle(title) +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  ggsave(plot.path, plot = plot, bg="white",
+         width=1500, height=1000, units="px", scale=2)
+  
   saveRDS(varPart, data_vp.path)
+  
+ 
 }
