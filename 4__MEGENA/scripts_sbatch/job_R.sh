@@ -21,7 +21,7 @@ checktime=$(date);
 echo "start time $checktime";
 
 # Run the R script
-Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/MEGENA_without_RIN_correction/plot2_network.R Nac
+Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/MEGENA_without_RIN_correction/7_module_preservation.R
 checktime=$(date);
 echo "end time $checktime"; 
 
