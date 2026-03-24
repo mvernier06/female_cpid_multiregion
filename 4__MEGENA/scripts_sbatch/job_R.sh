@@ -11,7 +11,7 @@
 
 # Mettre 32 cpus pour 2_pfn, 10 pour 3_mca, 1 pour les autres 
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=10G
+#SBATCH --mem=20G
 
 # Configuration de l'environnement
 source $(conda info --base)/etc/profile.d/conda.sh
@@ -21,7 +21,7 @@ checktime=$(date);
 echo "start time $checktime";
 
 # Run the R script
-Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/module_preservation_vs_male/7_module_preservation.R
+Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/MEGENA_without_RIN_correction/plot2_network.R Nac
 checktime=$(date);
 echo "end time $checktime"; 
 
