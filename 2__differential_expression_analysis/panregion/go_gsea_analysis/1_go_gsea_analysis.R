@@ -1,6 +1,9 @@
 #### ANALYSE PANREGION GO / GSEA ####
 rm(list=ls())
 #### LIBRARIES ####
+dir.create("~/R/library", showWarnings = FALSE, recursive = TRUE)
+.libPaths(c("~/R/library", .libPaths()))
+Sys.setenv(R_COMPILE_AND_INSTALL_PACKAGES = "always") 
 library(tidyverse)
 library(dplyr)
 library(clusterProfiler)
@@ -48,22 +51,22 @@ for(tp in tpList) {
                            OrgDb = organism,
                            keyType = "SYMBOL", 
                            ont = "ALL", 
-                           pvalueCutoff = 1,
-                           qvalueCutoff = 1, 
+                           pvalueCutoff = 0.5,
+                           qvalueCutoff = 0.5, 
                            pAdjustMethod = "BH", 
                            universe = counts_temp$label)
   
-  assign(paste0("go_panregion_1_", tp), go_panreg_tp, envir = .GlobalEnv)
+  assign(paste0("go_panregion_05_", tp), go_panreg_tp, envir = .GlobalEnv)
 }
 
 ## SAVE RESULTS ##
 rm(go_panreg_tp)
-go_obj <- ls()[grepl("go_panregion_1_",ls())]
-save(list=go_obj, file= paste0(output.path, "go_panregion_1_obj.Rdata"))
+go_obj <- ls()[grepl("go_panregion_05_",ls())]
+save(list=go_obj, file= paste0(output.path, "go_panregion_05_obj.Rdata"))
 
 ## COUNT RESULT ##
 for(tp in tpList){
-  go_obj <- paste0("go_panregion_1_", tp)
+  go_obj <- paste0("go_panregion_05_", tp)
   print(paste0("Panregion tp", tp, ": ",nrow(get(go_obj))))
 }
 
@@ -107,27 +110,28 @@ for(tp in tpList){
                keyType = "SYMBOL", 
                minGSSize = 3, 
                maxGSSize = 800, 
-               pvalueCutoff = 1,
+               pvalueCutoff = 0.1,
                verbose = TRUE, 
                OrgDb = organism, 
                pAdjustMethod = "BH",
                by = "fgsea",
                seed = 123)
   
-  assign(paste("fgsea_panregion_1", tp, sep = "_"), gse)
+  assign(paste("fgsea_panregion_01", tp, sep = "_"), gse)
 }
 
 #### SAVE RESULTS ####
-gse_obj <- ls()[grepl("fgsea_panregion_1_",ls())]
-save(list=gse_obj, file= paste0(output.path, "fgsea_panregion_1_obj.Rdata"))
+gse_obj <- ls()[grepl("fgsea_panregion_01_",ls())]
+save(list=gse_obj, file= paste0(output.path, "fgsea_panregion_01_obj.Rdata"))
 
 
 #### COUNTS RESULTS ####
 
 for(tp in tpList){
-  gse_obj <- paste("fgsea_panregion_1", tp, sep="_")
+  gse_obj <- paste("fgsea_panregion_01", tp, sep="_")
   print(paste0("Panregion tp", tp, ": ",nrow(get(gse_obj))))
 }
+
 
 
 
