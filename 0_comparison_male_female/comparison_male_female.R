@@ -497,3 +497,46 @@ ggplot(deg_counts,
   theme(axis.title.x=element_blank())
 
 ggsave("kinetics_DEG_by_sex.png", width = 8, height = 5)
+##################
+## l2fc kinetic ##
+##################
+deg_fc <- map_df(all_deg_objs, function(obj){
+  
+  df <- get(obj)
+  
+  df %>%
+    mutate(object = obj) %>%
+    select(object, log2fc)
+})
+
+deg_fc <- deg_fc %>%
+  separate(object,
+           into = c("deg", "reg", "timepoint", "sex"),
+           sep = "_") %>%
+  select(reg, timepoint, sex, log2fc)
+deg_fc <- deg_fc %>%
+  mutate(reg = case_when(
+    tolower(reg) == "nac" ~ "NAc",
+    TRUE ~ reg
+  )) %>%
+  filter(reg %in% common_reg)
+deg_fc <- deg_fc %>%
+  mutate(fcabs = abs(log2fc))
+
+ggplot(deg_fc,
+       aes(x = reg,
+           y = fcabs,
+           color = timepoint,
+           fill = timepoint)) +
+  geom_boxplot(outlier.shape = NA) +
+  facet_wrap(~ sex) +
+  labs(y = "|Log2FC|",
+       title = "Absolute Fold Change values per TP for each region",
+       fill = "Timepoint",
+       color = "Timepoint") +
+  coord_cartesian(ylim = c(0, 0.8)) +
+  scale_color_manual(values = c("#8594B6", "#8A4F21", "#465553")) +
+  scale_fill_manual(values = c("#F3F6FB", "#EDD9BA", "#D9E8E5")) +
+  theme_bw() +
+  theme(axis.title.x = element_blank())
+ggsave(plot=last_plot(), "l2fc_kinetics_by_sex.png")
