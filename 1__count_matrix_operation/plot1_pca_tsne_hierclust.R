@@ -149,7 +149,7 @@ label_colors <- reg_cols[anno$reg]
 corrplot(
   cor_matrix,
   method = "color",
-  col.lim = c(0.3,1),
+  col.lim = c(0.5,1),
   col = COL2('RdBu', 200),
   is.corr = FALSE,
   tl.col = label_colors,
