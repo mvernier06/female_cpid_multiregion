@@ -371,7 +371,7 @@ ggplot(df_plot,
            fill = sex)) +
   geom_bar(stat = "identity",
            position = position_dodge(width = 0.8)) +
-  facet_wrap(~ group, nrow = 1) +   # ← 2 graphiques côte à côte
+  facet_wrap(~ group, nrow = 1) +   
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         strip.text = element_text(size = 12, face = "bold")) +
@@ -481,3 +481,19 @@ ggplot(deg_counts,
        y = "Number of DEG",
        fill = "Sex")
 ggsave(plot=last_plot(), "number_of_DEG_male_vs_female.png")
+
+ggplot(deg_counts,
+       aes(x = timepoint,
+           y = n_deg,
+           color = reg,
+           group = reg)) +
+  geom_point(aes(pch=reg)) +
+  geom_line(aes(group=reg)) +
+  facet_wrap(~ sex) +
+  labs(title="DEG kinetics per TP within regions",
+       y = "Number of DEG",
+       color = "Region", shape = "Region") +
+  theme_bw() +
+  theme(axis.title.x=element_blank())
+
+ggsave("kinetics_DEG_by_sex.png", width = 8, height = 5)
