@@ -144,12 +144,12 @@ tp_cols    <- setNames(RColorBrewer::brewer.pal(length(unique(anno$timepoint)), 
 
 group_cols <- c("sham" = "#4DAF4A", "cuff" = "#E41A1C")
 
-png(file="heatmap_regions.png", width = 4000, height = 4000, units = "px", res = 100)
+png(file="heatmap_regions_0_1.png", width = 4000, height = 4000, units = "px", res = 100)
 label_colors <- reg_cols[anno$reg]
 corrplot(
   cor_matrix,
   method = "color",
-  col.lim = c(0.5,1),
+  col.lim = c(0,1),
   col = COL2('RdBu', 200),
   is.corr = FALSE,
   tl.col = label_colors,
