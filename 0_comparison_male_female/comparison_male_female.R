@@ -629,3 +629,108 @@ for(reg in common_reg){
   
   dev.off()
 }
+
+## même chose en séparant up and down 
+
+for(tp in timepoints){
+  
+  cat("Processing", tp, "\n")
+  
+  listInput <- list()
+  
+  for(reg in common_reg){
+    
+    deg_male   <- get(paste0("deg_", reg, "_", tp, "_male"))
+    deg_female <- get(paste0("deg_", reg, "_", tp, "_female"))
+    
+    # -------- UP --------
+    listInput[[paste0(reg, "_male_UP")]] <- deg_male %>%
+      filter(diffexpressed == "UP") %>%
+      pull(label)
+    
+    listInput[[paste0(reg, "_female_UP")]] <- deg_female %>%
+      filter(diffexpressed == "UP") %>%
+      pull(label)
+    
+    # -------- DOWN --------
+    listInput[[paste0(reg, "_male_DOWN")]] <- deg_male %>%
+      filter(diffexpressed == "DOWN") %>%
+      pull(label)
+    
+    listInput[[paste0(reg, "_female_DOWN")]] <- deg_female %>%
+      filter(diffexpressed == "DOWN") %>%
+      pull(label)
+  }
+  
+  # DEBUG
+  print(sapply(listInput, length))
+  
+  png(
+    file = paste0("deg_upset_", tp, "_male_vs_female_UPDOWN.png"),
+    width = 1600, height = 1000, res = 120
+  )
+  
+  print(
+    upset(
+      fromList(listInput),
+      nsets = length(listInput),
+      keep.order = TRUE,
+      order.by = "freq",
+      mainbar.y.label = paste0("DEGs intersections (UP/DOWN, Male vs Female, ", tp, ")"),
+      sets.x.label = "Number of DEGs"
+    )
+  )
+  
+  dev.off()
+}
+
+for(reg in common_reg){
+  
+  cat("Processing region:", reg, "\n")
+  
+  listInput <- list()
+  
+  for(tp in timepoints){
+    
+    deg_male   <- get(paste0("deg_", reg, "_", tp, "_male"))
+    deg_female <- get(paste0("deg_", reg, "_", tp, "_female"))
+    
+    # -------- UP --------
+    listInput[[paste0(tp, "_male_UP")]] <- deg_male %>%
+      filter(diffexpressed == "UP") %>%
+      pull(label)
+    
+    listInput[[paste0(tp, "_female_UP")]] <- deg_female %>%
+      filter(diffexpressed == "UP") %>%
+      pull(label)
+    
+    # -------- DOWN --------
+    listInput[[paste0(tp, "_male_DOWN")]] <- deg_male %>%
+      filter(diffexpressed == "DOWN") %>%
+      pull(label)
+    
+    listInput[[paste0(tp, "_female_DOWN")]] <- deg_female %>%
+      filter(diffexpressed == "DOWN") %>%
+      pull(label)
+  }
+  
+  print(sapply(listInput, length))
+  
+  png(
+    file = paste0("deg_upset_", reg, "_timepoints_sex_UPDOWN.png"),
+    width = 1600, height = 1000, res = 120
+  )
+  
+  print(
+    upset(
+      fromList(listInput),
+      nsets = length(listInput),
+      keep.order = TRUE,
+      order.by = "freq",
+      mainbar.y.label = paste0("DEGs intersections (UP/DOWN across timepoints, ", reg, ")"),
+      sets.x.label = "Number of DEGs"
+    )
+  )
+  
+  dev.off()
+}
