@@ -423,23 +423,31 @@ ggsave(plot=last_plot(), "number_of_sample_for_sham_male_and_female.png")
 deglist_male <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
 deglist_female <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
 
-load(deglist_male)
 
-male_objs <- ls(pattern = "^deg_")
+# -------- LOAD MALE --------
+male_env <- new.env()
+load(deglist_male, envir = male_env)
+
+male_objs <- ls(male_env, pattern = "^deg_")
 
 for(obj in male_objs){
-  assign(paste0(obj, "_male"), get(obj))
-  rm(list = obj)
+  assign(paste0(obj, "_male"), male_env[[obj]])
 }
 
-load(deglist_female)
 
-female_objs <- ls(pattern = "^deg_")
+# -------- LOAD FEMALE --------
+female_env <- new.env()
+load(deglist_female, envir = female_env)
+
+female_objs <- ls(female_env, pattern = "^deg_")
 
 for(obj in female_objs){
-  assign(paste0(obj, "_female"), get(obj))
-  rm(list = obj)
+  assign(paste0(obj, "_female"), female_env[[obj]])
 }
+
+deg_NAc_tp1_female <- deg_Nac_tp1_female
+deg_NAc_tp2_female <- deg_Nac_tp2_female
+deg_NAc_tp3_female <- deg_Nac_tp3_female
 
 all_deg_objs <- ls(pattern = "^deg_")
 
@@ -540,3 +548,84 @@ ggplot(deg_fc,
   theme_bw() +
   theme(axis.title.x = element_blank())
 ggsave(plot=last_plot(), "l2fc_kinetics_by_sex.png")
+
+#######################
+###    upset pot    ###
+#######################
+setwd("upset_plot")
+
+timepoints <- c("tp1", "tp2", "tp3")
+
+for(tp in timepoints){
+  
+  cat("Processing", tp, "\n")
+  
+  listInput <- list()
+  
+  for(reg in common_reg){
+    
+    # noms objets
+    obj_male   <- paste0("deg_", reg, "_", tp, "_male")
+    obj_female <- paste0("deg_", reg, "_", tp, "_female")
+    
+    # récupérer data
+    deg_male   <- get(obj_male)
+    deg_female <- get(obj_female)
+    
+    # extraire gènes
+    listInput[[paste0(reg, "_male")]]   <- deg_male$label
+    listInput[[paste0(reg, "_female")]] <- deg_female$label
+  }
+  
+  # ---------- DEBUG ----------
+  print(sapply(listInput, length))
+  
+  # ---------- PLOT ----------
+  png(
+    file = paste0("deg_upset_", tp, "_male_vs_female.png"),
+    width = 1200, height = 800, res = 120
+  )
+
+  print(
+    upset(
+      fromList(listInput),
+      nsets = length(listInput),   
+      keep.order = TRUE,
+      mainbar.y.label = paste0("DEGs intersections (Male vs Female, ", tp, ")"),
+      sets.x.label = "Number of DEGs",
+      order.by = "freq"
+    )
+  )
+
+  dev.off()
+}
+
+for(reg in common_reg){
+  
+  listInput <- list()
+  
+  for(tp in timepoints){
+    
+    deg_male   <- get(paste0("deg_", reg, "_", tp, "_male"))
+    deg_female <- get(paste0("deg_", reg, "_", tp, "_female"))
+    
+    listInput[[paste0(tp, "_male")]]   <- deg_male$label
+    listInput[[paste0(tp, "_female")]] <- deg_female$label
+  }
+  
+  png(
+    file = paste0("deg_upset_", reg, "_timepoints_sex.png"),
+    width = 1400, height = 900, res = 120
+  )
+  
+  print(
+    upset(
+      fromList(listInput),
+      nsets = length(listInput),
+      keep.order = TRUE,
+      order.by = "freq"
+    )
+  )
+  
+  dev.off()
+}
