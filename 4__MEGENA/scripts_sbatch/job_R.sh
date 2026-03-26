@@ -1,7 +1,7 @@
 #! /bin/bash
 #SBATCH --time=0-24:00:00
-#SBATCH -p public
-# SBATCH -p grant -A g2025a419c
+# SBATCH -p public
+#SBATCH -p grant -A g2025a419c
 #SBATCH --output=run_R_job%J.out
 #SBATCH --error=run_R_job%J.err
 #SBATCH --mail-type=END  
@@ -21,7 +21,7 @@ checktime=$(date);
 echo "start time $checktime";
 
 # Run the R script
-Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/MEGENA_without_RIN_correction/7_module_preservation.R
+Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/MEGENA_without_RIN_correction/9_module_preservation_with_without_RIN.R
 checktime=$(date);
 echo "end time $checktime"; 
 

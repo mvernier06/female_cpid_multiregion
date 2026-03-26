@@ -9,12 +9,12 @@ library(tidyverse)
 project.path <- "/home2020/home/inci/mvernier/cpid_multireg_female/"
 setwd(project.path)
 
-reg <- "Nac"
+reg <- "Nac" # ACC - Hb - Ins - Nac
 
 print(paste0("Région : ", reg))
 
 with_RIN_correction_modules.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA.Results_", reg, ".Rdata")
-with_RIN_correction_counts.path <- paste0("male_cpid_multiregion/data/4__MEGENA/logCPM_RINcorrected_",reg,".Rdata")
+with_RIN_correction_counts.path <- paste0("female_cpid_multiregion/data/4__MEGENA/logCPM_RINcorrected_",reg,".Rdata")
 
 without_RIN_correction_modules.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_without_RIN_correction/MEGENA.Results_", reg, ".Rdata")
 without_RIN_correction_counts.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_without_RIN_correction/CTF_normalized_counts_",reg,".Rdata")
@@ -27,7 +27,7 @@ load(with_RIN_correction_modules.path, envir = with)
 MEGENA.output_with  <- with$MEGENA.output
 summary.output_with <- with$summary.output
 with_RIN_correction_counts <-  load(with_RIN_correction_counts.path)
-with_RIN_correction_counts <- logCPM_RINcorrected 
+with_RIN_correction_counts <- logCPM_corrected 
 
 # -------- without RIN correction --------
 without <- new.env()
@@ -112,7 +112,7 @@ res_refWith <- data.frame(
 )
 
 head(res_refWith)
-filename <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_without_RIN_correction/preservation_vs_male/",reg,"/", reg, "_modulePreservation_refWith.Rdata")
+filename <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_without_RIN_correction/preservation_with_without_RIN/",reg,"/", reg, "_modulePreservation_refWith.Rdata")
 save(res_refWith, file = filename)
 
 ggplot(res_refWith, aes(x = size, y = Zsummary)) +
@@ -125,7 +125,7 @@ ggplot(res_refWith, aes(x = size, y = Zsummary)) +
     y = "Zsummary"
   ) +
   theme_minimal()
-plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_vs_male/Zsummary_size_refWith.png")
+plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_with_without_RIN/Zsummary_size_refWith.png")
 ggsave(plot=last_plot(), filename = plot_name)
 
 ggplot(res_refWith, aes(x = Zsummary)) +
@@ -139,11 +139,11 @@ ggplot(res_refWith, aes(x = Zsummary)) +
     y = "Nombre de modules"
   ) +
   theme_minimal()
-plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_vs_male/distribution_Zsummary_refWith.png")
+plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_with_without_RIN/distribution_Zsummary_refWith.png")
 ggsave(plot=last_plot(), filename=plot_name)
 
 #########################
-## Now with female ref ##
+## Now with without rin ref ##
 #########################
 print("Calcul de la préservation des modules avec without comme référence")
 colorList_without <- list(without = moduleColors_without)
@@ -169,7 +169,7 @@ res_refwithout <- data.frame(
 )
 
 head(res_refwithout)
-filename <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_without_RIN_correction/preservation_vs_male/",reg,"/", reg, "_modulePreservation_refwithout.Rdata")
+filename <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_without_RIN_correction/preservation_with_without_RIN/",reg,"/", reg, "_modulePreservation_refwithout.Rdata")
 save(res_refwithout, file = filename)
 
 ggplot(res_refwithout, aes(x = size, y = Zsummary)) +
@@ -182,7 +182,7 @@ ggplot(res_refwithout, aes(x = size, y = Zsummary)) +
     y = "Zsummary"
   ) +
   theme_minimal()
-plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_vs_male/Zsummary_size_refwithout.png")
+plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_with_without_RIN/Zsummary_size_refwithout.png")
 ggsave(plot=last_plot(), filename = plot_name)
 
 ggplot(res_refwithout, aes(x = Zsummary)) +
@@ -196,13 +196,13 @@ ggplot(res_refwithout, aes(x = Zsummary)) +
     y = "Nombre de modules"
   ) +
   theme_minimal()
-plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_vs_male/distribution_Zsummary_refwithout.png")
+plot_name <- paste0("female_cpid_multiregion/graphs_results/4__MEGENA/MEGENA_without_RIN_correction/",reg,"/preservation_with_without_RIN/distribution_Zsummary_refwithout.png")
 ggsave(plot=last_plot(), filename=plot_name)
 
-res_refMale$sex_direction <- "Male reference"
-res_refwithout$sex_direction <- "Female reference"
+res_refwith$sex_direction <- "With reference"
+res_refwithout$sex_direction <- "Without reference"
 
-df <- rbind(res_refMale, res_refwithout)
+df <- rbind(res_refwith, res_refwithout)
 
 ggplot(df, aes(x = Zsummary, fill = sex_direction)) +
   geom_density(alpha = 0.4) +

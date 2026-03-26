@@ -9,8 +9,8 @@ library(tidyverse)
 project.path <- "/home2020/home/inci/mvernier/cpid_multireg_female/"
 setwd(project.path)
 
-reg <- "Nac"
-reg_male <- "NAc"
+reg <- "Ins" # Hb - Ins -Nac
+reg_male <- "Ins" # Hb - Ins - NAc
 
 print(paste0("Région : ", reg))
 
