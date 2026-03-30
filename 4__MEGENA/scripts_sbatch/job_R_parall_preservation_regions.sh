@@ -35,7 +35,7 @@ reg2=$(echo $pair | cut -d' ' -f2)
 
 echo "Running $reg1 vs $reg2"
 
-Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/MEGENA_without_RIN_correction/9_module_preservation_between_regions.R $reg1 $reg2
+Rscript /home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/4__MEGENA/MEGENA_with_RIN_correction/module_preservation_between_regions/9_module_preservation_between_regions.R $reg1 $reg2
 checktime=$(date);
 echo "end time $checktime"; 
 
