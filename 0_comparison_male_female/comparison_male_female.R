@@ -761,7 +761,7 @@ ggplot(coldata_female, aes(x = reg, y = RIN, fill = reg)) +
 ggsave(plot=last_plot(), "RIN_comparson_across_reg_female.png")
 
 ggplot(coldata_male, aes(x = reg, y = RIN, fill = reg)) +
-  geom_boxplot( outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  geom_boxplot( alpha = 0.6, width = 0.6) +
   geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
   scale_fill_brewer(palette = "Set2") +
   labs(
@@ -774,7 +774,7 @@ ggplot(coldata_male, aes(x = reg, y = RIN, fill = reg)) +
 ggsave(plot=last_plot(), "RIN_comparson_across_reg_male.png")
 
 ggplot(coldata_all, aes(x = reg, y = RIN, fill = reg)) +
-  geom_boxplot( outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  geom_boxplot( alpha = 0.6, width = 0.6) +
   facet_wrap(~ sex) + 
   geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
   scale_fill_brewer(palette = "Set2") +
@@ -788,7 +788,7 @@ ggplot(coldata_all, aes(x = reg, y = RIN, fill = reg)) +
 ggsave(plot=last_plot(), "RIN_comparson_across_reg.png")
 
 ggplot(coldata_all, aes(x = reg, y = RIN, fill = reg)) +
-  geom_boxplot( outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  geom_boxplot(  alpha = 0.6, width = 0.6) +
   facet_grid(group ~ sex) + 
   geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
   scale_fill_brewer(palette = "Set2") +
