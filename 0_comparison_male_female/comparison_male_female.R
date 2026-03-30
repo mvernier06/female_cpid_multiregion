@@ -25,7 +25,7 @@ coldata_female <- coldata_female %>%
   mutate(sex = "female")
 
 coldata_male <- coldata_male %>%
-  mutate(sex = "male")
+  mutate(sex = "male", RIN = rin)
 
 df_female <- df_female %>% column_to_rownames("MGI.symbol")
 df_male <- df_male %>% column_to_rownames("MGI.symbol")
@@ -362,7 +362,7 @@ table(coldata_all$sex,
 
 df_plot <- coldata_all %>%
   as.data.frame() %>%
-  dplyr::count(sex, reg, timepoint, group)
+  dplyr::count(sex, reg, timepoint, group, RIN)
 
 
 ggplot(df_plot,
@@ -734,3 +734,69 @@ for(reg in common_reg){
   
   dev.off()
 }
+
+################################################################################################################################################
+## Comparaison des RIN 
+
+my_colors <- c(
+  "ACC" = "#66C2A5",
+  "Ins" = "#FC8D62",
+  "BLA" = "#8DA0CB",
+  "DRN" = "#E78AC3", 
+  "Hb" = "lightblue", 
+  "VTA" = "lightyellow", 
+  "Nac" = "lightpink"
+)
+ggplot(coldata_female, aes(x = reg, y = RIN, fill = reg)) +
+  geom_boxplot( outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
+  scale_fill_manual(values = my_colors) +
+  labs(
+    title = "Comparison of RIN across regions",
+    x = "Region",
+    y = "RIN"
+  )+ 
+  theme_bw() +
+  theme(axis.title.x = element_blank(), legend.position = "none")
+ggsave(plot=last_plot(), "RIN_comparson_across_reg_female.png")
+
+ggplot(coldata_male, aes(x = reg, y = RIN, fill = reg)) +
+  geom_boxplot( outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Comparison of RIN across regions",
+    x = "Region",
+    y = "RIN"
+  )+ 
+  theme_bw() +
+  theme(axis.title.x = element_blank(), legend.position = "none")
+ggsave(plot=last_plot(), "RIN_comparson_across_reg_male.png")
+
+ggplot(coldata_all, aes(x = reg, y = RIN, fill = reg)) +
+  geom_boxplot( outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  facet_wrap(~ sex) + 
+  geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Comparison of RIN across regions",
+    x = "Region",
+    y = "RIN"
+  )+ 
+  theme_bw() +
+  theme(axis.title.x = element_blank(), legend.position = "none")
+ggsave(plot=last_plot(), "RIN_comparson_across_reg.png")
+
+ggplot(coldata_all, aes(x = reg, y = RIN, fill = reg)) +
+  geom_boxplot( outlier.shape = NA, alpha = 0.6, width = 0.6) +
+  facet_grid(group ~ sex) + 
+  geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Comparison of RIN across regions",
+    x = "Region",
+    y = "RIN"
+  )+ 
+  theme_bw() +
+  theme(axis.title.x = element_blank(), legend.position = "none")
+ggsave(plot=last_plot(), "RIN_comparson_across_reg_group_sex.png")
