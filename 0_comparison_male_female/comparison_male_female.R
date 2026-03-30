@@ -841,8 +841,10 @@ coldata_common$timepoint <- as.factor(coldata_common$timepoint)
 ggplot(coldata_common, aes(x = reg, y = RIN, fill = timepoint)) +
   geom_boxplot(  alpha = 0.6, width = 0.6) +
   facet_grid(~ sex) + 
-  geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
+  geom_point(aes(color = timepoint), position = position_dodge(width = 0.6),size = 2,alpha = 0.8
+  ) +
   scale_fill_brewer(palette = "Set2") +
+  scale_color_brewer(palette = "Set2") +
   labs(
     title = "Comparison of RIN across region and time point",
     x = "Region",
