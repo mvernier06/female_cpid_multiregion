@@ -800,3 +800,25 @@ ggplot(coldata_all, aes(x = reg, y = RIN, fill = reg)) +
   theme_bw() +
   theme(axis.title.x = element_blank(), legend.position = "none")
 ggsave(plot=last_plot(), "RIN_comparson_across_reg_group_sex.png")
+
+regions_common <- coldata_all %>%
+  group_by(reg) %>%
+  summarise(sexes = n_distinct(sex)) %>%
+  filter(sexes == 2) %>%
+  pull(reg)
+coldata_common <- coldata_all %>% filter(reg %in% regions_common)
+
+ggplot(coldata_common, aes(x = reg, y = RIN, fill = reg)) +
+  geom_boxplot(  alpha = 0.6, width = 0.6) +
+  facet_grid(group ~ sex) + 
+  geom_jitter(width = 0.15, size = 2, alpha = 0.8) + 
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Comparison of RIN across regions",
+    x = "Region",
+    y = "RIN"
+  )+ 
+  theme_bw() +
+  theme(axis.title.x = element_blank(), legend.position = "none")
+ggsave(plot=last_plot(), "RIN_comparson_across_common_reg_group_sex.png")
+
