@@ -33,6 +33,9 @@ Ins_modulePreservation_refFemale <- res_refFemale
 load(Ins_modulePreservation_refMale.path)
 Ins_modulePreservation_refMale <- res_refMale
 
+# Output
+plot.path <- "graphs_results/4__MEGENA/MEGENA_without_RIN_correction/preservation_vs_male/"
+
 add_metadata <- function(df, reference, region) {
   df %>%
     mutate(
@@ -61,23 +64,24 @@ all_pres <- bind_rows(
 
 
 
-ggplot(all_pres, aes(x = module, y = Zsummary, fill = region)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~reference, scales = "free_x" ) +
+ggplot(all_pres, aes(x = size, y = Zsummary, color = region)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~reference) +
   geom_hline(yintercept = 2, linetype = "dashed", color = "blue") +
   geom_hline(yintercept = 10, linetype = "dashed", color = "red") +
   theme_bw() +
   # theme(axis.text.x = element_text(angle = 90)) +
   labs(title = "Module preservation (Zsummary)",
        y = "Zsummary",
-       x = "Module")
+       x = "Module size")
+
 
 ggplot(all_pres,
        aes(x = reorder_within(module, Zsummary, reference),
            y = Zsummary,
            fill = region)) +
   geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~reference + region, scales = "free_x") +
+  facet_grid(reference ~ region) +
   scale_x_reordered() +
   geom_hline(yintercept = 2, linetype = "dashed", color = "blue") +
   geom_hline(yintercept = 10, linetype = "dashed", color = "red") +
@@ -134,7 +138,8 @@ ggplot(plot_data, aes(x = category, y = n, fill = reference)) +
        y = "Number of modules",
        fill = "Reference") +
   scale_fill_manual(values = c("female" = "lightpink", "male" = "lightblue"))
-  
+file_name <- paste0(plot.path, "module_preservation_by_categories.png")
+ggsave(plot=last_plot(), file_name)
 
 plot_data_prop <- plot_data %>%
   group_by(region, reference) %>%
@@ -155,6 +160,9 @@ ggplot(plot_data_prop, aes(x = category, y = prop, fill = reference)) +
        y = "Proportion",
        fill = "Reference") +
   scale_fill_manual(values = c("female" = "lightpink", "male" = "lightblue"))
+file_name <- paste0(plot.path, "module_preservation_by_categories_proportions.png")
+ggsave(plot=last_plot(), file_name)
+
 
 ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
   geom_point(alpha = 0.5, size = 2) +
@@ -172,6 +180,8 @@ ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
   
   scale_color_manual(values = c("female" = "lightpink",
                                 "male" = "lightblue"))
+file_name <- paste0(plot.path, "module_preservation_module_size.png")
+ggsave(plot=last_plot(), file_name)
 
 ggplot(all_pres, aes(x = size, y = Zsummary, color = region)) +
   geom_point(alpha = 0.5, size = 2) +
@@ -190,6 +200,10 @@ ggplot(all_pres, aes(x = size, y = Zsummary, color = region)) +
   scale_color_manual(values = c("Ins" = "lightpink",
                                 "Hb" = "lightblue",
                                 "Nac" = "lightgreen"))
+file_name <- paste0(plot.path, "module_preservation_module_size_reg.png")
+ggsave(plot=last_plot(), file_name)
+
+
 
 ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
   geom_point(alpha = 0.4, size = 2) +
@@ -204,3 +218,5 @@ ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
        color = "Reference") +
   scale_color_manual(values = c("female" = "lightpink",
                                 "male" = "lightblue"))
+file_name <- paste0(plot.path, "module_preservation_module_size_zoom.png")
+ggsave(plot=last_plot(), file_name)

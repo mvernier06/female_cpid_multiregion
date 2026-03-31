@@ -10,12 +10,12 @@ project_path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/"
 setwd(project_path)
 
 ## INPUT ## 
-Nac_modulePreservation_refMale.path <- "data/4__MEGENA/preservation_vs_male/Nac/Nac_modulePreservation_refMale.Rdata"
-Nac_modulePreservation_refFemale.path <- "data/4__MEGENA/preservation_vs_male/Nac/Nac_modulePreservation_refFemale.Rdata"
-Hb_modulePreservation_refMale.path <- "data/4__MEGENA/preservation_vs_male/Hb/Hb_modulePreservation_refMale.Rdata"
-Hb_modulePreservation_refFemale.path <- "data/4__MEGENA/preservation_vs_male/Hb/Hb_modulePreservation_refFemale.Rdata"
-Ins_modulePreservation_refMale.path <- "data/4__MEGENA/preservation_vs_male/Ins/Ins_modulePreservation_refMale.Rdata"
-Ins_modulePreservation_refFemale.path <- "data/4__MEGENA/preservation_vs_male/Ins/Ins_modulePreservation_refFemale.Rdata"
+Nac_modulePreservation_refMale.path <- "data/4__MEGENA/MEGENA_with_RIN_correction/preservation_vs_male/Nac/Nac_modulePreservation_refMale.Rdata"
+Nac_modulePreservation_refFemale.path <- "data/4__MEGENA/MEGENA_with_RIN_correction/preservation_vs_male/Nac/Nac_modulePreservation_refFemale.Rdata"
+Hb_modulePreservation_refMale.path <- "data/4__MEGENA/MEGENA_with_RIN_correction/preservation_vs_male/Hb/Hb_modulePreservation_refMale.Rdata"
+Hb_modulePreservation_refFemale.path <- "data/4__MEGENA/MEGENA_with_RIN_correction/preservation_vs_male/Hb/Hb_modulePreservation_refFemale.Rdata"
+Ins_modulePreservation_refMale.path <- "data/4__MEGENA/MEGENA_with_RIN_correction/preservation_vs_male/Ins/Ins_modulePreservation_refMale.Rdata"
+Ins_modulePreservation_refFemale.path <- "data/4__MEGENA/MEGENA_with_RIN_correction/preservation_vs_male/Ins/Ins_modulePreservation_refFemale.Rdata"
 
 ## LOAD AN RENAME ## 
 load(Nac_modulePreservation_refFemale.path)
@@ -32,6 +32,9 @@ load(Ins_modulePreservation_refFemale.path)
 Ins_modulePreservation_refFemale <- res_refFemale
 load(Ins_modulePreservation_refMale.path)
 Ins_modulePreservation_refMale <- res_refMale
+
+# Output
+plot.path <- "graphs_results/4__MEGENA/MEGENA_with_RIN_correction/preservation_vs_male/"
 
 add_metadata <- function(df, reference, region) {
   df %>%
@@ -109,8 +112,6 @@ summary_stats <- all_pres %>%
 print(summary_stats)
 
 
-
-
 plot_data <- all_pres %>%
   group_by(region, reference, category) %>%
   summarise(n = n(), .groups = "drop")
@@ -119,6 +120,7 @@ plot_data$category <- factor(plot_data$category,
 totals <- plot_data %>%
   group_by(region, reference) %>%
   summarise(total = sum(n), .groups = "drop")
+
 ggplot(plot_data, aes(x = category, y = n, fill = reference)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
   
@@ -134,7 +136,8 @@ ggplot(plot_data, aes(x = category, y = n, fill = reference)) +
        y = "Number of modules",
        fill = "Reference") +
   scale_fill_manual(values = c("female" = "lightpink", "male" = "lightblue"))
-  
+file_name <- paste0(plot.path, "module_preservation_by_categories.png")
+ggsave(plot=last_plot(), file_name)
 
 plot_data_prop <- plot_data %>%
   group_by(region, reference) %>%
@@ -155,6 +158,9 @@ ggplot(plot_data_prop, aes(x = category, y = prop, fill = reference)) +
        y = "Proportion",
        fill = "Reference") +
   scale_fill_manual(values = c("female" = "lightpink", "male" = "lightblue"))
+file_name <- paste0(plot.path, "module_preservation_by_categories_proportions.png")
+ggsave(plot=last_plot(), file_name)
+
 
 ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
   geom_point(alpha = 0.5, size = 2) +
@@ -172,6 +178,8 @@ ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
   
   scale_color_manual(values = c("female" = "lightpink",
                                 "male" = "lightblue"))
+file_name <- paste0(plot.path, "module_preservation_module_size.png")
+ggsave(plot=last_plot(), file_name)
 
 ggplot(all_pres, aes(x = size, y = Zsummary, color = region)) +
   geom_point(alpha = 0.5, size = 2) +
@@ -190,6 +198,10 @@ ggplot(all_pres, aes(x = size, y = Zsummary, color = region)) +
   scale_color_manual(values = c("Ins" = "lightpink",
                                 "Hb" = "lightblue",
                                 "Nac" = "lightgreen"))
+file_name <- paste0(plot.path, "module_preservation_module_size_reg.png")
+ggsave(plot=last_plot(), file_name)
+
+
 
 ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
   geom_point(alpha = 0.4, size = 2) +
@@ -204,3 +216,5 @@ ggplot(all_pres, aes(x = size, y = Zsummary, color = reference)) +
        color = "Reference") +
   scale_color_manual(values = c("female" = "lightpink",
                                 "male" = "lightblue"))
+file_name <- paste0(plot.path, "module_preservation_module_size_zoom.png")
+ggsave(plot=last_plot(), file_name)
