@@ -257,7 +257,7 @@ ggplot(df2, aes(y = pval, x = type, fill = type)) +
   labs(title = "RRHO comparison MAX pval",
        y = "-Log10( P-value )",
        x = element_blank()) +
-  stat_compare_means(comparisons = my_comparisons, label.y = 250) +
+  stat_compare_means(comparisons = my_comparisons, label.y = 110) +
   scale_fill_manual(values = c("pink", "lightgreen")) +
   theme_classic()+
   guides(fill = guide_legend(title = NULL)) 
