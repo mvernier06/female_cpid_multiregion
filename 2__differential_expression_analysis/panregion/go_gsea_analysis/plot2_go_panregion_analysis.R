@@ -58,7 +58,7 @@ get_dotplot <- function(reg, tp, x_axis, nb_terms, plot_path) {
                         title = paste0("Dotplot of GO results 0.5 - ", reg, " TP", tp))
   
   # Crée le répertoire de sortie s'il n'existe pas
-  output_dir <- file.path(plot_path, "dotplots", reg, x_axis)
+  output_dir <- file.path(plot_path, "dotplots",  x_axis)
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
