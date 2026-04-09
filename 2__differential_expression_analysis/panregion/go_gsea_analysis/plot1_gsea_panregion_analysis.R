@@ -20,8 +20,7 @@ setwd(project.path)
 
 ## INPUT ##
 gsea_01 <- "data/2__differential_expression_analysis/panregion/go_gsea_analysis/fgsea_panregion_01_obj.Rdata"
-gsea_1 <-   "data/2__differential_expression_analysis/panregion/go_gsea_analysis/fgsea_panregion_1_obj.Rdata"
-go_05 <- "data/2__differential_expression_analysis/panregion/go_gsea_analysis/go_panregion_05_obj.Rdata"
+gsea_1 <- "data/2__differential_expression_analysis/panregion/go_gsea_analysis/fgsea_panregion_1_obj.Rdata"
 
 ## OUTPUT ##
 data <- "data/2__differential_expression_analysis/panregion/go_gsea_analysis/"
@@ -31,7 +30,7 @@ dir.create(data, recursive = TRUE)
 #### LOAD DATA ####
 load(gsea_01)
 load(gsea_1)
-load(go_05)
+
 
 #### CRITERIA ####
 tpList <- c(1, 2, 3)
@@ -72,91 +71,11 @@ apply(params, 1, function(row) {
   )
 })
 
-
-
-################################################################################
-######                          DOTPLOT ODD RATIO                         ######
-################################################################################
-
-
-odds_ratio <- function(tp, x_axis, plot_path) {
-  # S'assurer que le dossier existe
-  output_dir <- file.path(plot_path, "dotplots", x_axis)
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-  
-  # Récupérer l'objet FGSEA ou enrichGO (ici on part sur enrichGO pour l'odds ratio)
-  enr_name <- paste0("go_panregion_05_", tp)
-  res_enrich <- get(enr_name)
-  
-  # Vérifier si l'objet existe
-  if (!exists(enr_name)) {
-    message(paste("Objet", enr_name, "n'existe pas."))
-    return(NULL)
-  }
-  
-  res_enrich <- get(enr_name)
-  
-  # Vérifier s'il y a des résultats significatifs
-  df <- as.data.frame(res_enrich)
-  if (nrow(df) == 0) {
-    message(paste("Aucun résultat dans", enr_name, "- on skip."))
-    return(NULL)
-  }
-  
-  # Transformer en data frame pour calculer les odds ratio
-  df <- as.data.frame(res_enrich)
-  
-  # Évaluer les ratios en nombre
-  eval_ratio <- function(ratio_str) {
-    parts <- strsplit(ratio_str, "/")[[1]]
-    as.numeric(parts[1]) / as.numeric(parts[2])
-  }
-  
-  df$GeneRatio_num <- unlist(sapply(strsplit(df$GeneRatio, "/"), 
-                                    function(x) as.numeric(x[1]) / as.numeric(x[2])))
-  df$BgRatio_num   <- unlist(sapply(strsplit(df$BgRatio, "/"),   
-                                    function(x) as.numeric(x[1]) / as.numeric(x[2])))
-  
-  # Calcul de l’odds ratio
-  df$odds_ratio <- (df$GeneRatio_num / (1 - df$GeneRatio_num)) /
-    (df$BgRatio_num / (1 - df$BgRatio_num))
-  
-  # Remettre les données dans l'objet enrichResult avec les nouvelles colonnes
-  res_enrich@result <- df
-  
-  # Faire le dotplot avec l'odds_ratio sur l’axe X
-  dotplot_gsea <- dotplot(
-    res_enrich,
-    showCategory = 15,
-    x = "odds_ratio",
-    title = paste0("Dotplot (Odds Ratio) - panregion TP", tp)
-  )
-  
-  # Sauvegarde
-  ggsave(
-    filename = file.path(output_dir, paste0("dotplot_odds_ratio_panregion_go_05_tp", 
-                                            tp, ".png")),
-    plot = dotplot_gsea,
-    bg = "white",
-    width = 1900,
-    height = 1200,
-    units = "px",
-    scale = 2
-  )
-}
-
-
-#### PARAMETERS ####
-tpList <- c(1, 2, 3)
-params <- expand.grid(tp = tpList)
-
-#### APPLY FUNCTION #### 
 apply(params, 1, function(row) {
-  odds_ratio(
-    tp = as.numeric(row[["tp"]]),
-    x_axis = "odds ratio", 
+  get_dotplot(
+    tp = row["tp"], 
+    x_axis = "NES", 
+    nb_terms = 15,
     plot_path = plot.file
   )
 })
@@ -244,59 +163,6 @@ heatmap_files <- function(tp_list) {
 
 #### LUNCH LOOP ####
 heatmap_files(tpList)
-
-
-#### FUNCTION TO GENERATE HEATMAPS ####
-
-
-terms_list <- c("myelin", "calcium", "oligo", "neuron", "axon", "micro", 
-                "neurofil", "sero", "opio", "dendri", "astrocyte", "GABA", "sheath")
-
-#### LOOP TO HAVE HEATMAP FILES #### 
-heatmap_files <- function(region_list, tp_list) {
-  
-  for (reg in region_list) {
-    for (tp in tp_list) {
-      
-      # Créer dynamiquement le nom de l'objet à partir de la région et du time point
-      obj_name <- paste0("fgsea_", reg, "_01_", tp)
-      
-      # Vérifier si l'objet existe dans l'environnement
-      if (exists(obj_name)) {
-        
-        # Récupérer l'objet correspondant à partir de l'environnement
-        file_tp <- get(obj_name, envir = .GlobalEnv)
-        file_tp <- as.data.frame(file_tp)
-        # Sélectionner les colonnes d'intérêt
-        file_tp <- file_tp %>% 
-          dplyr::select(Description, NES, pvalue, p.adjust, qvalue)
-        
-        # Renommer les colonnes
-        colnames(file_tp) <- c("Description", 
-                               paste0("NES_tp", tp),
-                               paste0("pvalue_tp", tp),
-                               paste0("p.adjust_tp", tp),
-                               paste0("qvalue_tp", tp))
-        
-        # Sauvegarder le tableau dans l'environnement global
-        assign(paste0(reg, "_tp", tp), file_tp, envir = .GlobalEnv)
-      } else {
-        message(paste("L'objet", obj_name, "n'existe pas dans l'environnement."))
-      }
-    }
-    
-    # Fusionner les différents time points (tp1, tp2, tp3) pour la région donnée
-    gsea_alltp <- Reduce(function(x, y) full_join(x, y, by = "Description"),
-                         lapply(tp_list, function(tp) get(paste0(reg, "_tp", tp), envir = .GlobalEnv)))
-    
-    # Sauvegarder le résultat final pour la région
-    assign(paste0("gsea_", reg, "_01_alltp"), gsea_alltp, envir = .GlobalEnv)
-  }
-}
-
-
-#### LUNCH LOOP ####
-heatmap_files(regionList, tpList)
 
 
 
