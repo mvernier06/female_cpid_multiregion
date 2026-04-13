@@ -11,8 +11,8 @@ reg <- "Ins"
 print(paste0("Running MEGENA for region: ", reg))
 
 # PATHS
-pfn.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/pfn_", reg, ".Rdata")
-output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/MEGENA.Results_", reg, ".Rdata") # file to save results
+pfn.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/wpfn_", reg, ".Rdata")
+output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/MEGENA.Results_", reg, ".Rdata") # file to save results
 
 # import PFN
 load(pfn.path)

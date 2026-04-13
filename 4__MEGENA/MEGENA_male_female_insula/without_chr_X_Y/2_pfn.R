@@ -9,8 +9,8 @@ reg <- "Ins"
 print(paste("Doing PFN for region:", reg))
 
 # PATHS
-ijw.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/ijw_", reg, ".Rdata")
-output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/pfn_", reg, ".Rdata") # file to save results
+ijw.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/ijw_", reg, ".Rdata")
+output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/pfn_", reg, ".Rdata") # file to save results
 
 # import correlation matrix
 load(ijw.path)

@@ -22,11 +22,11 @@ print(paste0("Running module enrichment for region: ", reg))
 
 #### PATHS ####
 # alluvial_patterns.path <- paste0("data/2__differential_expression_analysis/alluvial_patterns_", reg, ".Rdata")
-megena_results.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/MEGENA.Results_", reg, ".Rdata")
-modtable.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/modtable_", reg, ".Rdata")
+megena_results.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/MEGENA.Results_", reg, ".Rdata")
+modtable.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/modtable_", reg, ".Rdata")
 # deglist.path <- "data/2__differential_expression_analysis/deglist.Rdata"
 brain_cell_markers.path <- "data/4__MEGENA/TR_Cell_markers_for_MEGENA_annotation/Barres_lab_Cell-specific_genes_MG_21Nov2023.xlsx"
-output.path <- "data/4__MEGENA/MEGENA_male_female_insula/"
+output.path <- "data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/"
 
 print(paste0("Running module enrichment for region: ", reg))
 #### alluvial patterns enrichment in modules ####

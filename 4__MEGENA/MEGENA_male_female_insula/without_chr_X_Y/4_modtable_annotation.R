@@ -9,8 +9,8 @@ reg <- "Ins"
 print(paste0("Annotating module table for region: ", reg))
 
 #### PATHS ####
-megena_results.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/MEGENA.Results_", reg, ".Rdata")
-output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/modtable_", reg, ".Rdata")
+megena_results.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/MEGENA.Results_", reg, ".Rdata")
+output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/modtable_", reg, ".Rdata")
 
 #### load env ####
 load(megena_results.path)

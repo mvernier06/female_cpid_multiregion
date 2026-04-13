@@ -11,8 +11,8 @@ reg <- "Ins"
 print(paste("Doing correlation matrix for region:", reg))
 
 # PATHS ####
-CTF_normalized.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/CTF_normalized_counts_", reg, ".Rdata") # CTF normalized counts for the queried region
-output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/ijw_", reg, ".Rdata") # file to save results
+CTF_normalized.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/CTF_normalized_counts_", reg, ".Rdata") # CTF normalized counts for the queried region
+output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/ijw_", reg, ".Rdata") # file to save results
 
 # import CTF normalized counts
 load(CTF_normalized.path)

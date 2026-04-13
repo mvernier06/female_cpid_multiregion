@@ -12,9 +12,9 @@ reg <- "Ins"
 print(paste0("Plotting MEGENA modules for region: ", reg))
 
 #### PATHS ####
-MEGENA.Results.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/MEGENA.Results_", reg, ".Rdata")
+MEGENA.Results.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/MEGENA.Results_", reg, ".Rdata")
 print(MEGENA.Results.path)
-output.path <- paste0("graphs_results/4__MEGENA/MEGENA_male_female_insula/", reg) # file to save results
+output.path <- paste0("graphs_results/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/", reg) # file to save results
 dir.create(output.path, recursive = TRUE, showWarnings = TRUE)
 
 

@@ -14,7 +14,7 @@ reg <- "Ins"
 raw_counts_female.path <- "female_cpid_multiregion/data/counts_m39_M32/cpid_multireg_counts.txt"
 raw_counts_male.path <- "male_cpid_multiregion/data/count_data/outliers_removed/un_normalised_counts.csv"
 annot_table.path <- "female_cpid_multiregion/data/counts_m39_M32/annotation_final.csv"
-output.path <- "female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/" # folder to save results
+output.path <- "female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y" # folder to save results
 dir.create(output.path)
 print(paste0("output path: ", output.path))
 
