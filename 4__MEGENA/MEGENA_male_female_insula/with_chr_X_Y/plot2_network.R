@@ -17,6 +17,7 @@ library(pheatmap)
 library(RColorBrewer)
 
 project_dir <- "/home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/"
+project_dir <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/"
 setwd(project_dir)
 
 reg <- "Ins"
@@ -572,16 +573,18 @@ genes_chrXY <- read.table(
 module_chrXY_presence <- sapply(module_list, function(genes_in_module){
   any(genes_in_module %in% genes_chrXY$MGI.symbol)
 })
+module_chrXY_presence_named <- module_chrXY_presence
+names(module_chrXY_presence_named) <- str_replace(names(module_chrXY_presence), "c1_", "M")
 
 network_plot_chrXY_presence <- function(){
 
   nodes$color <- ifelse(
-    nodes$name %in% names(module_chrXY_presence[module_chrXY_presence]),
-    "darkorange",
+    nodes$name %in% names(module_chrXY_presence_named[module_chrXY_presence_named]),
+    "red",
     "grey80"
   )
   
-  nodes$label <- ifelse(nodes$color == "darkorange", nodes$name, NA)
+  nodes$label <- ifelse(nodes$color == "red", nodes$name, NA)
   
   flareGraph <- graph_from_data_frame(edges, vertices = nodes)
 
