@@ -28,7 +28,7 @@ print(paste0("Plotting network of MEGENA modules for region: ", reg))
 modtable.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/modtable_", reg, ".Rdata")
 # alluvial_enrichment.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/enrichment_alluvial/enrichment_alluvial_", reg, ".Rdata")
 cell_types_enrichment <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/enrichment_cell_types/enrichment_cell_types_", reg, ".Rdata")
-plots.path <- paste0("graphs_results/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/", reg)
+plots.path <- paste0("graphs_results/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/")
 celltypes_plots.path <- paste0(plots.path, "/cell_types_network_plots_", reg)
 output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/without_chr_X_Y/enrichment_cell_types/")
 
