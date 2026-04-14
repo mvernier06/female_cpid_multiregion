@@ -37,31 +37,7 @@ deg_Nac_tp1$region <- "Nac"
 
 df_tp1 <- bind_rows(panregion_tp1, deg_Hb_tp1, deg_Ins_tp1, deg_Nac_tp1)
 
-### STATISTICAL TEST : T TEST AND WILCOXON ###
-## CALCULATIONS ##
-stat_tests_tp1 <- df_tp1 %>%
-  group_by(region) %>%
-  summarise(t_test_p = t.test(log2fc, mu = 0)$p.value,            # FOR THE MEAN
-            wilcox_p = wilcox.test(log2fc, mu = 0)$p.value)       # FOR THE MEDIAN
 
-
-## SIGNS FOR SIGNIFICANCE ## 
-#  FOR TP1 #
-stat_tests_tp1 <- stat_tests_tp1 %>%
-  mutate(
-    significance_t_test = case_when(
-      t_test_p < 0.001 ~ "***",
-      t_test_p < 0.01 ~ "**",
-      t_test_p < 0.05 ~ "*",
-      TRUE ~ ""
-    ),
-    significance_wilcox = case_when(
-      wilcox_p < 0.001 ~ "***",
-      wilcox_p < 0.01 ~ "**",
-      wilcox_p < 0.05 ~ "*",
-      TRUE ~ ""
-    )
-  )
 
 violin_plot_tp1 <- df_tp1 %>%
   ggplot(aes(x = region, y = log2fc, fill = region)) +
@@ -78,11 +54,7 @@ violin_plot_tp1 <- df_tp1 %>%
        x = "Regions", y = "log2FoldChange", fill = "Regions") +
   theme_minimal() +
   scale_y_continuous(limits = c(-1.5, 1.65)) +
-  theme(plot.title = element_text(size = 12)) + 
-  geom_text(data = stat_tests_tp1, aes (x=region, y = 1.55,
-                                        label = significance_t_test), color = "black") +
-  geom_text(data = stat_tests_tp1, aes (x=region, y = 1.6,
-                                        label = significance_wilcox), color = "red")
+  theme(plot.title = element_text(size = 12)) 
 violin_plot_tp1
 ggsave(plot=last_plot(), violin.path1)
 
@@ -95,31 +67,6 @@ deg_Nac_tp2$region <- "Nac"
 
 df_tp2 <- bind_rows(panregion_tp2, deg_Hb_tp2, deg_Ins_tp2, deg_Nac_tp2)
 
-### STATISTICAL TEST : T TEST AND WILCOXON ###
-## CALCULATIONS ##
-stat_tests_tp2 <- df_tp2 %>%
-  group_by(region) %>%
-  summarise(t_test_p = t.test(log2fc, mu = 0)$p.value,            # FOR THE MEAN
-            wilcox_p = wilcox.test(log2fc, mu = 0)$p.value)       # FOR THE MEDIAN
-
-
-## SIGNS FOR SIGNIFICANCE ## 
-#  FOR TP2 #
-stat_tests_tp2 <- stat_tests_tp2 %>%
-  mutate(
-    significance_t_test = case_when(
-      t_test_p < 0.001 ~ "***",
-      t_test_p < 0.01 ~ "**",
-      t_test_p < 0.05 ~ "*",
-      TRUE ~ ""
-    ),
-    significance_wilcox = case_when(
-      wilcox_p < 0.001 ~ "***",
-      wilcox_p < 0.01 ~ "**",
-      wilcox_p < 0.05 ~ "*",
-      TRUE ~ ""
-    )
-  )
 
 violin_plot_tp2 <- df_tp2 %>%
   ggplot(aes(x = region, y = log2fc, fill = region)) +
@@ -136,11 +83,7 @@ violin_plot_tp2 <- df_tp2 %>%
        x = "Regions", y = "log2FoldChange", fill = "Regions") +
   theme_minimal() +
   scale_y_continuous(limits = c(-1.05, 1.3)) +
-  theme(plot.title = element_text(size = 12)) + 
-  geom_text(data = stat_tests_tp2, aes (x=region, y = 1.20,
-                                        label = significance_t_test), color = "black") +
-  geom_text(data = stat_tests_tp2, aes (x=region, y = 1.25,
-                                        label = significance_wilcox), color = "red")
+  theme(plot.title = element_text(size = 12)) 
 violin_plot_tp2
 ggsave(plot=last_plot(), violin.path2)
 
@@ -153,31 +96,7 @@ deg_Nac_tp3$region <- "Nac"
 
 df_tp3 <- bind_rows(panregion_tp3, deg_Hb_tp3, deg_Ins_tp3, deg_Nac_tp3)
 
-### STATISTICAL TEST : T TEST AND WILCOXON ###
-## CALCULATIONS ##
-stat_tests_tp3 <- df_tp3 %>%
-  group_by(region) %>%
-  summarise(t_test_p = t.test(log2fc, mu = 0)$p.value,            # FOR THE MEAN
-            wilcox_p = wilcox.test(log2fc, mu = 0)$p.value)       # FOR THE MEDIAN
 
-
-## SIGNS FOR SIGNIFICANCE ## 
-#  FOR TP3 #
-stat_tests_tp3 <- stat_tests_tp3 %>%
-  mutate(
-    significance_t_test = case_when(
-      t_test_p < 0.001 ~ "***",
-      t_test_p < 0.01 ~ "**",
-      t_test_p < 0.05 ~ "*",
-      TRUE ~ ""
-    ),
-    significance_wilcox = case_when(
-      wilcox_p < 0.001 ~ "***",
-      wilcox_p < 0.01 ~ "**",
-      wilcox_p < 0.05 ~ "*",
-      TRUE ~ ""
-    )
-  )
 
 violin_plot_tp3 <- df_tp3 %>%
   ggplot(aes(x = region, y = log2fc, fill = region)) +
@@ -194,10 +113,6 @@ violin_plot_tp3 <- df_tp3 %>%
        x = "Regions", y = "log2FoldChange", fill = "Regions") +
   theme_minimal() +
   scale_y_continuous(limits = c(-0.8, 1.1)) +
-  theme(plot.title = element_text(size = 12)) + 
-  geom_text(data = stat_tests_tp3, aes (x=region, y = 1,
-                                        label = significance_t_test), color = "black") +
-  geom_text(data = stat_tests_tp3, aes (x=region, y = 1.05,
-                                        label = significance_wilcox), color = "red")
+  theme(plot.title = element_text(size = 12)) 
 violin_plot_tp3
 ggsave(plot=last_plot(), violin.path3)
