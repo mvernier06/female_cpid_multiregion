@@ -1,6 +1,10 @@
 library(tidyverse)
 library(tibble)
 library(ggplot2)
+library(clusterProfiler)
+## ANNOTATIONS DATABASE ##
+organism = "org.Mm.eg.db"
+library(organism, character.only = TRUE)
 
 rm(list=ls())
 
@@ -93,3 +97,82 @@ ggplot(intersection_df, aes(x=timepoint, y=n_genes, color=region)) +
   theme_bw() +
   theme(axis.title.x=element_blank())
 ggsave(plot=last_plot(), paste0(output_path, "overlaping_deg_male_female.png"))
+
+
+## Enrichissement 
+
+for(name in names(intersections_list)){
+  message("Doing GO analysis of ", name)
+  
+  genes <- intersections_list[[name]]
+  
+  go <- enrichGO(gene = genes, 
+                       OrgDb = organism, 
+                       keyType = "SYMBOL", 
+                       ont ="ALL",
+                       pAdjustMethod = "BH", 
+                       qvalueCutoff = 1)
+  
+  assign(paste0("go_", name), go, envir = .GlobalEnv)
+}
+
+
+## SAVE RESULTS ##
+go_obj <- ls()[grepl("go_",ls())]
+save(list=go_obj, file= paste0(output_path, "go_obj.Rdata"))
+
+## COUNT RESULT ##
+for(name in names(intersections_list)){
+  go_obj <- paste0("go_", name)
+  print(paste0(name, ": ",nrow(get(go_obj))))
+}
+ 
+#### REDUCED TERMS FUNCTION #### 
+go_rrvgo <- function(intersections_list, ontologies) {
+  ## GO ## 
+  for (name in names(intersections_list)) {
+    for (ont in ontologies) {
+      message(paste0("Ontology: ", ont))
+      go_name <- paste0("go_", name)
+      go_res <- get(go_name, envir = .GlobalEnv)
+      go_ont <- go_res@result$ID[go_res@result$ONTOLOGY == ont]
+      go_ont_qval <- go_res@result$qvalue[go_res@result$ONTOLOGY == ont]
+      
+      ## get simMAtrix ## 
+      
+      if (!is.null(go_ont) && length(go_ont) > 1) {
+        simMatrix <- calculateSimMatrix(go_ont, 
+                                        orgdb = "org.Mm.eg.db", 
+                                        ont = ont, 
+                                        method = "Rel")
+        if (nrow(simMatrix) > 1) { 
+          
+          scores <- setNames(-log10(go_ont_qval), go_ont)
+          
+          reducedTerms <- reduceSimMatrix(simMatrix, 
+                                          scores, 
+                                          threshold = 0.7,
+                                          orgdb = "org.Mm.eg.db")
+          
+          
+          ## SAVE ##
+          # PLOT # 
+          output_path_treemap <- paste0(output_path, "treemap/", name,"/")
+          dir.create(output_path_treemap, recursive = TRUE)
+          output_file <- file.path(output_path_treemap, paste0("/treemap_", name, "_", ont, ".png"))
+          
+          png(output_file, width = 8, height = 8, units = "in", res = 600)
+          treemapPlot(reducedTerms)  
+          dev.off()
+          
+          # DATA #
+          assign(paste("red_go",name, ont, sep = "_"), reducedTerms, envir = .GlobalEnv)
+        }
+        
+        
+      }
+    }
+  }
+}
+list_ontology <- c("BP", "CC", "MF")
+go_rrvgo(intersections_list,  list_ontology)
