@@ -1,3 +1,7 @@
+.libPaths(c("~/R/library", .libPaths()))
+
+Sys.setenv(R_COMPILE_AND_INSTALL_PACKAGES = "always") 
+
 library(tidyverse)
 library(tibble)
 library(ggplot2)
@@ -15,7 +19,9 @@ deg_male_path <- "cpid_multiregion/data/2__differential_expression_analysis/degl
 deg_female_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
 
 output_path <- "female_cpid_multiregion/graphs_results/0_comparison_male_female/intersection_deg/"
+output_data_path <- "female_cpid_multiregion/data/0_comparison_male_female/"
 dir.create(output_path)
+dir.create(output_data_path, recursive = TRUE)
 
 # -------- LOAD MALE --------
 male_env <- new.env()
@@ -76,7 +82,7 @@ for(tp in timepoints){
 }
 intersection_sizes <- sapply(intersections_list, length)
 intersection_sizes
-
+save(intersections_list, file = paste0(output_data_path,"intersection_deg/deg_intersection.Rdata"))
 
 
 intersection_df <- tibble(
@@ -97,6 +103,36 @@ ggplot(intersection_df, aes(x=timepoint, y=n_genes, color=region)) +
   theme_bw() +
   theme(axis.title.x=element_blank())
 ggsave(plot=last_plot(), paste0(output_path, "overlaping_deg_male_female.png"))
+
+intersect_insula <- list(
+  tp1 = intersections_list[['Ins_tp1']], 
+  tp2 = intersections_list[['Ins_tp2']], 
+  tp3 = intersections_list[['Ins_tp3']]
+)
+
+inter_1_2_Ins <- intersect(intersect_insula['tp1'], intersect_insula['tp2'])
+inter_2_3_Ins <- intersect(intersect_insula['tp2'], intersect_insula['tp3'])
+inter_1_3_Ins <- intersect(intersect_insula['tp1'], intersect_insula['tp3'])
+
+intersect_Hb <- list(
+  tp1 = intersections_list[['Hb_tp1']], 
+  tp2 = intersections_list[['Hb_tp2']], 
+  tp3 = intersections_list[['Hb_tp3']]
+)
+
+inter_1_2_Hb <- intersect(intersect_Hb['tp1'], intersect_Hb['tp2'])
+inter_2_3_Hb <- intersect(intersect_Hb['tp2'], intersect_Hb['tp3'])
+inter_1_3_Hb <- intersect(intersect_Hb['tp1'], intersect_Hb['tp3'])
+
+intersect_Nac <- list(
+  tp1 = intersections_list[['NAc_tp1']], 
+  tp2 = intersections_list[['NAc_tp2']], 
+  tp3 = intersections_list[['NAc_tp3']]
+)
+
+inter_1_2_NAc <- intersect(intersect_Nac['tp1'], intersect_Nac['tp2'])
+inter_2_3_NAc <- intersect(intersect_Nac['tp2'], intersect_Nac['tp3'])
+inter_1_3_NAc <- intersect(intersect_Nac['tp1'], intersect_Nac['tp3'])
 
 
 ## Enrichissement 
@@ -119,7 +155,7 @@ for(name in names(intersections_list)){
 
 ## SAVE RESULTS ##
 go_obj <- ls()[grepl("go_",ls())]
-save(list=go_obj, file= paste0(output_path, "go_obj.Rdata"))
+save(list=go_obj, file= paste0(output_data_path, "intersection_deg/go_obj.Rdata"))
 
 ## COUNT RESULT ##
 for(name in names(intersections_list)){
@@ -176,3 +212,4 @@ go_rrvgo <- function(intersections_list, ontologies) {
 }
 list_ontology <- c("BP", "CC", "MF")
 go_rrvgo(intersections_list,  list_ontology)
+

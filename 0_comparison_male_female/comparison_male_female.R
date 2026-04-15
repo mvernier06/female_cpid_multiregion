@@ -514,14 +514,14 @@ deg_fc <- map_df(all_deg_objs, function(obj){
   
   df %>%
     mutate(object = obj) %>%
-    select(object, log2fc)
+    select(object, log2fc, pval)
 })
 
 deg_fc <- deg_fc %>%
   separate(object,
            into = c("deg", "reg", "timepoint", "sex"),
            sep = "_") %>%
-  select(reg, timepoint, sex, log2fc)
+  select(reg, timepoint, sex, log2fc, pval)
 deg_fc <- deg_fc %>%
   mutate(reg = case_when(
     tolower(reg) == "nac" ~ "NAc",
@@ -734,6 +734,59 @@ for(reg in common_reg){
   
   dev.off()
 }
+
+#######################
+###  L2FC vs pvalue ###
+#######################
+ggplot(deg_fc, aes(x = pval, y = log2fc, col = reg)) + 
+  geom_point(alpha = 0.5) + 
+  facet_wrap(~ sex) +
+  theme_bw() 
+ggsave(plot=last_plot(), "scatter_l2fc_pvalue_region.png")
+  
+ggplot(deg_fc, aes(x = pval, y = log2fc)) + 
+  geom_hex() +
+  scale_fill_viridis_c() +
+  facet_wrap(~ sex) +
+  theme_bw()
+
+#######################
+### Volcano ###
+################
+
+tp <-"tp1"
+
+create_volcano <- function(deg_fc, reg1, reg2, reg3, tp) {
+  df <- deg_fc %>%
+    dplyr::rename(region = reg) %>%
+    dplyr::filter(
+      region %in% c("Ins", "Hb", "NAc"),
+      timepoint == tp
+    ) %>%
+    dplyr::mutate(log10p = -log10(pval))
+  df_plot <- df %>%
+    dplyr::filter(region %in% c(reg1, reg2, reg3),
+                  timepoint == tp)
+  
+  ggplot(df_plot, aes(x = log2fc, y = -log10(pval), col = region)) +
+    geom_point(alpha = 0.6) +
+    facet_wrap(~ sex) +
+    theme_minimal() +
+    scale_colour_viridis_d() +
+    geom_vline(xintercept = c(-1, 1), col = "grey", lty = "dashed") +
+    geom_hline(yintercept = -log10(0.05), col = "grey", lty = "dashed") +
+    labs(
+      title = paste0("Volcano ", reg1, ", ", reg2, " and ", reg3," (", tp, ")"),
+      x = "log2 FoldChange",
+      y = "-log10 (p_value)",
+      col = "Regions"
+    ) +
+    theme(plot.title = element_text(size = 15))
+}
+
+create_volcano(deg_fc, "Ins", "Hb", "NAc", "tp1")
+create_volcano(deg_fc, "Ins", "Hb", "NAc", "tp2")
+create_volcano(deg_fc, "Ins", "Hb", "NAc", "tp3")
 
 ################################################################################################################################################
 ## Comparaison des RIN 
