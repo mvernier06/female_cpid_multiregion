@@ -35,6 +35,7 @@ enrichment_chrXY.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/with_c
 plots.path <- paste0("graphs_results/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/")
 celltypes_plots.path <- paste0(plots.path, "/cell_types_network_plots_", reg)
 presence_chrXY_plots.path <- paste0(plots.path, "/presence_chrXY_network_plots_", reg)
+plot_deg_intersect_path <- paste0(plots.path, "/intersect_deg_", reg)
 enrichment_chrXY_plots.path <- paste0(plots.path, "/enrichment_chrXY_network_plots_", reg)
 
 output.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/enrichment_cell_types/")
@@ -43,6 +44,7 @@ dir.create(plots.path, recursive = TRUE, showWarnings = FALSE)
 dir.create(celltypes_plots.path)
 dir.create(presence_chrXY_plots.path)
 dir.create(enrichment_chrXY_plots.path)
+dir.create(plot_deg_intersect_path)
 
 #### NETWORK PLOT ####
 load(modtable.path)
@@ -63,6 +65,7 @@ init_network <- function(){
   nodes <- rbind(c("M1",0), nodes)
   assign("nodes", nodes, envir = .GlobalEnv)
 }
+
 init_network()
 #head(nodes)
 #head(edges)
@@ -670,3 +673,76 @@ init_network()
 network_plot_chrXY_enrichment()
 
 print("Network plotting completed for all specified categories.")
+
+##############################
+enrichment_deg_interesct.path <- "data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/enrichment_intersect/"
+
+network_plot_intersect_enrichment <- function(tp, modules_enriched_intersect){
+  
+  nodes$color <- NA
+  nodes$color[nodes$name %in% modules_enriched_intersect] <- "red"
+  nodes$color[is.na(nodes$color)] <- "grey80"
+  
+  nodes$label <- ifelse(nodes$name %in% modules_enriched_intersect,
+                        nodes$name, NA)
+  
+  flareGraph <- graph_from_data_frame(edges, vertices = nodes)
+  
+  # -------- CIRCULAR --------
+  p <- ggraph(flareGraph, 'igraph', algorithm = 'tree', circular = TRUE) + 
+    geom_edge_diagonal(aes(alpha = after_stat(index))) +
+    coord_fixed() + 
+    scale_edge_alpha('Direction', guide = 'none') +
+    geom_node_point(aes(color = color), size = 2) +
+    geom_node_text(aes(label = label), repel = TRUE,
+                   na.rm = TRUE, size = 2.5,
+                   max.overlaps = 100, color = "grey20") +
+    scale_color_identity() +
+    ggforce::theme_no_axes() +
+    ggtitle(paste0("Modules enriched in DEG intersect - Ins - ", tp))
+  
+  ggsave(p,
+         filename = paste0(plot_deg_intersect_path, "/intersect_enrichment_Ins_", tp, ".png"))
+  
+  # -------- DENDROGRAM --------
+  p_dendrogram <- ggraph(flareGraph, 'igraph', algorithm = 'tree', circular = FALSE) + 
+    geom_edge_diagonal(aes(alpha = after_stat(index))) +
+    scale_edge_alpha('Direction', guide = 'none') +
+    geom_node_point(aes(color = color), size = 2) +
+    geom_node_text(aes(label = label), repel = TRUE,
+                   na.rm = TRUE, size = 2.5,
+                   max.overlaps = 100, color = "grey20") +
+    scale_color_identity() +
+    ggforce::theme_no_axes() +
+    ggtitle(paste0("Modules enriched in DEG intersect - Ins - ", tp))
+  
+  ggsave(p_dendrogram,
+         filename = paste0(plot_deg_intersect_path, "/dendrogram_intersect_enrichment_Ins_", tp, ".png"))
+}
+
+
+for(tp in c("tp1", "tp2", "tp3")){
+  
+  file <- paste0(enrichment_deg_interesct.path,
+                 "/enrichment_Ins_",
+                 tp,
+                 ".Rdata")
+  
+  if(file.exists(file)){
+    
+    load(file)  # charge "Overlap"
+    
+    t <- Overlap %>%
+      rownames_to_column("modules") %>%
+      dplyr::select(modules, overlap.pval) %>%
+      rename(pval = overlap.pval) %>%
+      mutate(signif = ifelse(pval < 0.05, "enriched", NA))
+    
+    t$modules <- str_replace(t$modules, "c1_", "M")
+    t$modules <- str_replace(t$modules, ".intersect", "")
+    
+    modules_enriched_intersect <<- t$modules[which(t$signif == "enriched")]
+    
+    network_plot_intersect_enrichment(tp, modules_enriched_intersect)
+  }
+}

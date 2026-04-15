@@ -22,12 +22,14 @@ print(paste0("Running module enrichment for region: ", reg))
 
 #### PATHS ####
 # alluvial_patterns.path <- paste0("data/2__differential_expression_analysis/alluvial_patterns_", reg, ".Rdata")
-megena_results.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/MEGENA.Results_", reg, ".Rdata")
-modtable.path <- paste0("data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/modtable_", reg, ".Rdata")
-# deglist.path <- "data/2__differential_expression_analysis/deglist.Rdata"
-brain_cell_markers.path <- "data/4__MEGENA/TR_Cell_markers_for_MEGENA_annotation/Barres_lab_Cell-specific_genes_MG_21Nov2023.xlsx"
-genes_chrXY.path <- "data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/genes_chrXY_MGI_symbols.txt"
-output.path <- "data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/"
+megena_results.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/MEGENA.Results_", reg, ".Rdata")
+modtable.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/modtable_", reg, ".Rdata")
+brain_cell_markers.path <- "female_cpid_multiregion/data/4__MEGENA/TR_Cell_markers_for_MEGENA_annotation/Barres_lab_Cell-specific_genes_MG_21Nov2023.xlsx"
+genes_chrXY.path <- "female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/genes_chrXY_MGI_symbols.txt"
+intersect_list_path <- "female_cpid_multiregion/graphs_results/0_comparison_male_female/intersection_deg/deg_intersection.Rdata"
+deg_male_path <- "cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
+deg_female_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
+output.path <- "female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/"
 
 print(paste0("Running module enrichment for region: ", reg))
 #### alluvial patterns enrichment in modules ####
@@ -176,3 +178,92 @@ save(Overlap_chrXY,
      file = paste0(output.path, "enrichment_chrXY/enrichment_chrXY_", reg, ".Rdata"))
 print("Finished chrX and chrY genes enrichment in modules.")
 
+
+
+### Enrichment deg common between male and female ###
+
+# -------- LOAD MALE --------
+male_env <- new.env()
+load(deg_male_path, envir = male_env)
+
+male_objs <- ls(male_env, pattern = "^deg_")
+
+for(obj in male_objs){
+  assign(paste0(obj, "_male"), male_env[[obj]])
+}
+
+
+# -------- LOAD FEMALE --------
+female_env <- new.env()
+load(deg_female_path, envir = female_env)
+
+female_objs <- ls(female_env, pattern = "^deg_")
+
+for(obj in female_objs){
+  assign(paste0(obj, "_female"), female_env[[obj]])
+}
+
+
+load(intersect_list_path)
+
+timepoints <- c("tp1", "tp2", "tp3")
+
+# définir une fois l'univers de gènes
+# total.genes <- unique(c(
+#   deg_Ins_tp1_male$label,
+#   deg_Ins_tp1_female$label,
+#   deg_Ins_tp2_male$label,
+#   deg_Ins_tp2_female$label,
+#   deg_Ins_tp3_male$label,
+#   deg_Ins_tp3_female$label
+# ))
+tp <- "tp3"
+for(tp in timepoints){
+  
+  cat("Processing Insula", tp, "...\n")
+  
+  genes <- intersections_list[[paste0("Ins_", tp)]]
+  genes_list <- list(intersect = genes)
+  
+  # sécurité : éviter erreurs si liste vide
+  if(is.null(genes) || length(genes) == 0){
+    cat("No genes for", tp, "- skipping\n")
+    next
+  }
+  
+  # -------- GOM --------
+  Object <- newGOM(
+    genes_list,
+    module_list,
+    total.genes
+  )
+  
+  # -------- Extraction --------
+  overlap.intersect <- getMatrix(Object, name = "intersection")
+  overlap.pval <- getMatrix(Object, name = "pval")
+  overlap.OR <- getMatrix(Object, name = "odds.ratio")
+  overlap.list <- getNestedList(Object, name = "intersection")
+  
+  # -------- Table finale --------
+  Overlap <- cbind(
+    overlap.intersect,
+    overlap.pval,
+    overlap.OR,
+    overlap.list
+  ) %>%
+    data.frame() %>%
+    dplyr::arrange(overlap.pval)
+  
+  # -------- Save --------
+  save(
+    Overlap,
+    file = paste0(
+      output.path,
+      "enrichment_intersect/enrichment_Ins_",
+      tp,
+      ".Rdata"
+    )
+  )
+  
+  cat("Finished", tp, "\n\n")
+}
