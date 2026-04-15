@@ -7,6 +7,7 @@ rm(list=ls())
 #### PATHS ####
 deglist.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
 tempcountlist.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/tempcountlist.Rdata"
+alluvial_palette.path <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/alluvial_palette.rds"
 plot.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/graphs_results/2__differential_expression_analysis/alluvial"
 output.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/"
 
@@ -63,24 +64,25 @@ regionlist <- c("ACC", "Hb", "Ins", "Nac")
 get_alluvial_patterns(regionlist)
 
 
+pal <- readRDS(alluvial_palette.path)
 
-#### COLOR PALETTE ####
-# get a list of all patterns
-all_patterns_lst <- unique(c(df_new_ACC %>% .$diffexpressed_alltp %>% unique,
-                             df_new_Hb %>% .$diffexpressed_alltp %>% unique,
-                             df_new_Ins %>% .$diffexpressed_alltp %>% unique,
-                             df_new_Nac %>% .$diffexpressed_alltp %>% unique))
-all_patterns_lst <- all_patterns_lst[order(as.character(all_patterns_lst))]
-write_rds(all_patterns_lst, "all_patterns_lst.rds")
-
-# same color palette for all graphs
-get_color_pal <- function(n) {
-  hues = seq(15, 375, length = n + 1)
-  hcl(h = hues, l = 65, c = 100)[1:n]
-}
-pal <- get_color_pal(length(all_patterns_lst))
-names(pal) <- all_patterns_lst
-pal[14] <- "palegreen3" # change ns_ns_UP color because to close from ns_ns_DOWN for the BLA
+# #### COLOR PALETTE ####
+# # get a list of all patterns
+# all_patterns_lst <- unique(c(df_new_ACC %>% .$diffexpressed_alltp %>% unique,
+#                              df_new_Hb %>% .$diffexpressed_alltp %>% unique,
+#                              df_new_Ins %>% .$diffexpressed_alltp %>% unique,
+#                              df_new_Nac %>% .$diffexpressed_alltp %>% unique))
+# all_patterns_lst <- all_patterns_lst[order(as.character(all_patterns_lst))]
+# write_rds(all_patterns_lst, "all_patterns_lst.rds")
+# 
+# # same color palette for all graphs
+# get_color_pal <- function(n) {
+#   hues = seq(15, 375, length = n + 1)
+#   hcl(h = hues, l = 65, c = 100)[1:n]
+# }
+# pal <- get_color_pal(length(all_patterns_lst))
+# names(pal) <- all_patterns_lst
+# pal[14] <- "palegreen3" # change ns_ns_UP color because to close from ns_ns_DOWN for the BLA
 write_rds(pal, "alluvial_palette.rds")
 
 
