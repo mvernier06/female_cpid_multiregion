@@ -6,6 +6,10 @@ library(tidyverse)
 library(tibble)
 library(ggplot2)
 library(clusterProfiler)
+library(rrvgo)
+library(GOSemSim)
+library(AnnotationDbi)
+library(GO.db)
 ## ANNOTATIONS DATABASE ##
 organism = "org.Mm.eg.db"
 library(organism, character.only = TRUE)
@@ -17,6 +21,8 @@ setwd(project.path)
 
 deg_male_path <- "cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
 deg_female_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
+counts_female_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
+counts_male_path <- "cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
 
 output_path <- "female_cpid_multiregion/graphs_results/0_comparison_male_female/intersection_deg/"
 output_data_path <- "female_cpid_multiregion/data/0_comparison_male_female/"
@@ -137,6 +143,10 @@ inter_1_3_NAc <- intersect(intersect_Nac['tp1'], intersect_Nac['tp3'])
 
 ## Enrichissement 
 
+counts_female <- readRDS(counts_female_path)
+counts_male <- readRDS(counts_male_path)
+intersect_counts <- intersect(counts_female$MGI.symbol, counts_male$MGI.symbol)
+
 for(name in names(intersections_list)){
   message("Doing GO analysis of ", name)
   
@@ -147,7 +157,8 @@ for(name in names(intersections_list)){
                        keyType = "SYMBOL", 
                        ont ="ALL",
                        pAdjustMethod = "BH", 
-                       qvalueCutoff = 1)
+                       qvalueCutoff = 1, 
+                       universe = intersect_counts)
   
   assign(paste0("go_", name), go, envir = .GlobalEnv)
 }
@@ -155,13 +166,37 @@ for(name in names(intersections_list)){
 
 ## SAVE RESULTS ##
 go_obj <- ls()[grepl("go_",ls())]
-save(list=go_obj, file= paste0(output_data_path, "intersection_deg/go_obj.Rdata"))
+save(list=go_obj, file= paste0(output_data_path, "intersection_deg/go_obj_specific_universe.Rdata"))
 
+list_terms <- list()
 ## COUNT RESULT ##
 for(name in names(intersections_list)){
   go_obj <- paste0("go_", name)
   print(paste0(name, ": ",nrow(get(go_obj))))
+  list_terms[[name]] <- get(go_obj)@result$Description
 }
+
+terms_size <- sapply(list_terms, length)
+terms_size
+
+
+terms_df <- tibble(
+  comparison = names(terms_size),
+  n_terms = terms_size
+) %>%
+  tidyr::separate(comparison, into = c("region", "timepoint"), sep = "_")
+
+terms_df
+
+ggplot(terms_df, aes(x=timepoint, y=n_terms, color=region)) +
+  geom_point(aes(pch=region)) +
+  geom_line(aes(group=region)) +
+  labs(title="Enriched terms of overlapping DEG between male and female (specific universe)",
+       y = "Number of enriched terms",
+       color = "Region", shape = "Region") +
+  theme_bw() +
+  theme(axis.title.x=element_blank())
+ggsave(plot=last_plot(), paste0(output_path, "number_terms_overlaping_deg_male_female.png"))
  
 #### REDUCED TERMS FUNCTION #### 
 go_rrvgo <- function(intersections_list, ontologies) {
@@ -193,7 +228,7 @@ go_rrvgo <- function(intersections_list, ontologies) {
           
           ## SAVE ##
           # PLOT # 
-          output_path_treemap <- paste0(output_path, "treemap/", name,"/")
+          output_path_treemap <- paste0(output_path, "treemap_specific_universe/", name,"/")
           dir.create(output_path_treemap, recursive = TRUE)
           output_file <- file.path(output_path_treemap, paste0("/treemap_", name, "_", ont, ".png"))
           
