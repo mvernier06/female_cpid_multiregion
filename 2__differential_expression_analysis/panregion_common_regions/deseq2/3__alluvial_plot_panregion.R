@@ -17,7 +17,7 @@ df_tp2.path <- "data/2__differential_expression_analysis/panregion_common_region
 df_tp3.path <- "data/2__differential_expression_analysis/panregion_common_regions/deseq2/design_reg_group/annotation_deg/panregion_annotated_genes_tp3.rds"
 
 ## PALETTE ##  
-palette.path <- "data/2__differential_expression_analysis/alluvial_palette.rds" # recupere la palette utilisé en region unique 
+palette.path <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/alluvial_palette.rds" # recupere la palette utilisé en region unique 
 
 ## OUTPUT ##
 alluvial_plot.path <- "graphs_results/panregion_common_regions/deseq2_reg_group/alluvial_panregion_reg_group.png" 
