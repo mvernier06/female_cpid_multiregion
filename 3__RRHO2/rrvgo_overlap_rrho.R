@@ -1,23 +1,30 @@
+.libPaths(c("~/R/library", .libPaths()))
+Sys.setenv(R_COMPILE_AND_INSTALL_PACKAGES = "always") 
 library(clusterProfiler)
 library(rrvgo)
 library(org.Mm.eg.db)
 library(dplyr)
 library(openxlsx)
 library(pheatmap)
+library(tidyverse)
 
 rm(list=ls())
 
+project_path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/"
+setwd(project_path)
+
 base_dir <- "data/3__RRHO2/overlap_GO_results"
 out_dir  <- "data/3__RRHO2/rrvgo_overlaps_rrho"
+out_dir_graph <-  "graphs_results/3__RRHO2/gene_overlap_rrho/"
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(out_dir_graph)
 
 # récupérer tous les fichiers GO
 files <- list.files(base_dir, pattern = "\\.rds$", recursive = TRUE, full.names = TRUE)
 
 all_results <- list()
 
-f <- files[1]
 for (f in files) {
   
   ego <- readRDS(f)
@@ -60,7 +67,6 @@ for (comp in unique(go_all$comparison)) {
   if (grepl("^RRHO_", comp)) {
     
     # multitp
-    # RRHO_ACC_1vs2_up_up
     
     parts <- str_split(comp, "_")[[1]]
     
@@ -74,7 +80,6 @@ for (comp in unique(go_all$comparison)) {
   } else if (grepl("^rrho", comp)) {
     
     # multireg
-    # rrhoACCvsHb1_up_up
     
     tmp <- str_remove(comp, "^rrho")
     
@@ -94,7 +99,7 @@ for (comp in unique(go_all$comparison)) {
   }
   
   ## créer dossier
-  full_outdir <- file.path(out_dir, subdir)
+  full_outdir <- file.path(out_dir_graph, subdir)
   dir.create(full_outdir, recursive = TRUE, showWarnings = FALSE)
   
   ## -------------------------
