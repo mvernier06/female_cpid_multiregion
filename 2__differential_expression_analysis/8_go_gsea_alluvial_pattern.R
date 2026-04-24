@@ -30,7 +30,6 @@ counts <- readRDS(annotated_counts.path)
 
 ## SELECT REGIONS AND TIMEPOINTS ##
 regionList <-c("ACC", "Ins", "Hb", "Nac")
-
 for (reg in regionList ){
   pattern_reg.path <- paste0(pattern.path, "alluvial_patterns_", reg, ".Rdata")
   load(pattern_reg.path)
@@ -52,16 +51,18 @@ for (reg in regionList ){
     if (!is.null(go_pattern)) {
       print(length(go_pattern@result$Description))
     }
-    
     assign(paste("go", pattern, reg, sep="_"), go_pattern, envir = .GlobalEnv)
-    
   }
+  
+  go_obj <- ls()[grepl(reg,ls())]
+  save(list=go_obj, file= paste0(output.path, "go_patterns_", reg,".Rdata"))
+  
 }
 
 ## SAVE RESULTS ##
 rm(go_pattern)
 go_obj <- ls()[grepl("go_",ls())]
-save(list=go_obj, file= paste0(output.path, "go_patterns.Rdata"))
+save(list=go_obj, file= paste0(output.path, "go_patterns_all.Rdata"))
 
 
 
