@@ -32,11 +32,13 @@ for (comp in unique(intersection_full$comparison)) {
       log_female = -log10(padj_female)
     )
   
+  max_scale <- max(df$log_male, df$log_female)
+  
  p <- ggplot(df, aes(x = log_male, y = log_female, col = Description)) + 
-   geom_point(alpha = 0.9) +
+   geom_point(alpha = 0.7) +
    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
-   scale_y_continuous(limits = c(0, 30)) + 
-   scale_x_continuous(limits = c(0, 30)) +
+   scale_y_continuous(limits = c(0, max_scale)) + 
+   scale_x_continuous(limits = c(0, max_scale)) +
    labs(
      x = "-log10(padj) Male",
      y = "-log10(padj) Female",
