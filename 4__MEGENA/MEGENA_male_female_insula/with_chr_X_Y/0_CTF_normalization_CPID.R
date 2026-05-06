@@ -26,13 +26,31 @@ raw_counts_female <- read.table(raw_counts_female.path, header = TRUE,
                          check.names = FALSE)
 
 #recuperer les gènes des chromosomes X et Y pour plus tard 
-genes_chrXY_raw <- raw_counts_female %>%
-  dplyr::filter(Chr %in% c("chrX", "chrY")) %>%
-  dplyr::select(Geneid) %>%
+# Gènes chrX
+genes_chrX <- raw_counts_female %>%
+  filter(Chr == "chrX") %>%
+  mutate(Geneid = str_replace(Geneid, "\\..*", "")) %>%
+  select(Geneid) %>%
   distinct()
-print(paste0("Number of genes on chrX and chrY: ", nrow(genes_chrXY_raw)))
-# enlever les versions
-genes_chrXY_raw$Geneid <- str_replace(genes_chrXY_raw$Geneid, "\\..*", "")
+
+# Gènes chrY
+genes_chrY <- raw_counts_female %>%
+  filter(Chr == "chrY") %>%
+  mutate(Geneid = str_replace(Geneid, "\\..*", "")) %>%
+  select(Geneid) %>%
+  distinct()
+
+# Vérification
+cat("Nombre de gènes chrX :", nrow(genes_chrX), "\n")
+cat("Nombre de gènes chrY :", nrow(genes_chrY), "\n")
+
+# genes_chrXY_raw <- raw_counts_female %>%
+#   dplyr::filter(Chr %in% c("chrX", "chrY")) %>%
+#   dplyr::select(Geneid) %>%
+#   distinct()
+# print(paste0("Number of genes on chrX and chrY: ", nrow(genes_chrXY_raw)))
+# # enlever les versions
+# genes_chrXY_raw$Geneid <- str_replace(genes_chrXY_raw$Geneid, "\\..*", "")
 
 
 counts_female <- raw_counts_female[, !(colnames(raw_counts_female) %in% c(
@@ -59,11 +77,22 @@ counts_female <- inner_join(counts_female, ens2symbol, by=c("Geneid"="Gene.stabl
 counts_female <- counts_female %>% relocate(MGI.symbol, .before=Geneid) 
 counts_female <- counts_female[!duplicated(counts_female$MGI.symbol),] # remove duplicates to avoid alluvial errors (ex: pattern ns_ns_ns)
 
-genes_chrXY <- genes_chrXY_raw %>%
+# genes_chrXY <- genes_chrXY_raw %>%
+#   inner_join(ens2symbol, by = c("Geneid" = "Gene.stable.ID")) %>%
+#   dplyr::select(MGI.symbol) %>%
+#   distinct()
+# print(paste0("Number of genes on chrX and chrY after annotation: ", nrow(genes_chrXY)))
+
+genes_chrX <- genes_chrX %>%
   inner_join(ens2symbol, by = c("Geneid" = "Gene.stable.ID")) %>%
   dplyr::select(MGI.symbol) %>%
   distinct()
-print(paste0("Number of genes on chrX and chrY after annotation: ", nrow(genes_chrXY)))
+print(paste0("Number of genes on chrX after annotation: ", nrow(genes_chrX)))
+genes_chrY <- genes_chrY %>%
+  inner_join(ens2symbol, by = c("Geneid" = "Gene.stable.ID")) %>%
+  dplyr::select(MGI.symbol) %>%
+  distinct()
+print(paste0("Number of genes on chrY after annotation: ", nrow(genes_chrY)))
 
 # Keeping only Insula samples and excluding outlier
 outlier <- "Ins.1837"
@@ -113,12 +142,15 @@ norm_factors <- calcNormFactors(object = counts_both, lib.size = lib_size, metho
 CTF_normalized <- sweep(counts_both, 2, norm_factors, "/")
 print(dim(CTF_normalized))
 
-genes_chrXY_in_data <- genes_chrXY %>%
+genes_chrX_in_data <- genes_chrX%>%
   dplyr::filter(MGI.symbol %in% rownames(CTF_normalized))
-print(paste0("Number of genes on chrX and chrY in the normalized data: ", nrow(genes_chrXY_in_data)))
+print(paste0("Number of genes on chrX and chrY in the normalized data: ", nrow(genes_chrX_in_data)))
+genes_chrY_in_data <- genes_chrY%>%
+  dplyr::filter(MGI.symbol %in% rownames(CTF_normalized))
+print(paste0("Number of genes on chrX and chrY in the normalized data: ", nrow(genes_chrY_in_data)))
 write.table(
-  genes_chrXY_in_data,
-  file = paste0(output.path, "genes_chrXY_MGI_symbols.txt"),
+  genes_chrX_in_data,
+  file = paste0(output.path, "genes_chrX_MGI_symbols.txt"),
   quote = FALSE,
   row.names = FALSE,
   col.names = TRUE
