@@ -13,7 +13,7 @@ library(tidyverse)
 library(GeneOverlap)
 library(MEGENA)
 
-setwd("/home2020/home/inci/mvernier/cpid_multireg_female/female_cpid_multiregion/")
+setwd("/home2020/home/inci/mvernier/cpid_multireg_female/")
 
 # Choose a region : Ins
 reg <- "Ins"
@@ -25,104 +25,31 @@ print(paste0("Running module enrichment for region: ", reg))
 megena_results.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/MEGENA.Results_", reg, ".Rdata")
 modtable.path <- paste0("female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/modtable_", reg, ".Rdata")
 brain_cell_markers.path <- "female_cpid_multiregion/data/4__MEGENA/TR_Cell_markers_for_MEGENA_annotation/Barres_lab_Cell-specific_genes_MG_21Nov2023.xlsx"
-genes_chrXY.path <- "female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/genes_chrXY_MGI_symbols.txt"
+genes_chrX.path <- "female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/genes_chrX_MGI_symbols.txt"
 intersect_list_path <- "female_cpid_multiregion/graphs_results/0_comparison_male_female/intersection_deg/deg_intersection.Rdata"
 deg_male_path <- "cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
 deg_female_path <- "female_cpid_multiregion/data/2__differential_expression_analysis/deglist.Rdata"
 output.path <- "female_cpid_multiregion/data/4__MEGENA/MEGENA_male_female_insula/with_chr_X_Y/"
 
 print(paste0("Running module enrichment for region: ", reg))
-#### alluvial patterns enrichment in modules ####
-# load(alluvial_patterns.path) # df_new
+
 load(megena_results.path)
 load(modtable.path)
 
 genes_chrXY <- read.table(
-  genes_chrXY.path,
+  genes_chrX.path,
   header = TRUE,
   stringsAsFactors = FALSE
 )
 genelist_chrXY <- list()
 genelist_chrXY[["genes"]] <- genes_chrXY$MGI.symbol
 
-# patterns <- df_new %>% select(MGI.symbol, diffexpressed_alltp)
-# genes_per_patterns <- aggregate(MGI.symbol~diffexpressed_alltp, data=patterns, FUN = function(x) paste0(x,collapse = '; '))
-# genes_per_patterns
 
-# data <- genes_per_patterns
-# colnames(genes_per_patterns)
-# output <- list()
-# for (i in 1:nrow(data)) {
-#   diffexpressed <- as.character(data$diffexpressed_alltp[i])
-#   print(diffexpressed)
-#   gene_list <- strsplit(data$MGI.symbol[i], "; ")[[1]]
-#   output[[diffexpressed]] <- gene_list
-# }
-
-# # Create individual df for each patterns
-# for (diffexpressed in names(output)) {
-#   assign(diffexpressed, output[[diffexpressed]])
-# }
-
-# pattern_list <- unique(patterns$diffexpressed_alltp)
 module_list <- summary.output$modules
 
 total.genes <- vcount(g) # Make this the total number of genes across all modules (size of the biggest module)
 length(MEGENA.output$module.output)
 modtable
-
-# for(pattern in pattern_list){
-#   overlapgenes <- get(pattern)
-#   overlaplist <- list()
-#   overlaplist[["genes"]] <- overlapgenes
-  
-#   Object <- newGOM(overlaplist, module_list, total.genes)
-  
-#   overlap.intersect <- getMatrix(Object, name="intersection")
-#   overlap.intersect.list <- getNestedList(Object, name="intersection")
-#   overlap.pval <- getMatrix(Object, name="pval")
-#   overlap.OR <- getMatrix(Object, name="odds.ratio")
-#   Overlap.sum <- cbind(overlap.intersect,overlap.pval,overlap.OR, overlap.intersect.list)
-#   Overlap.sum <- data.frame(Overlap.sum)
-#   Overlap.sum <- Overlap.sum %>% arrange(overlap.pval)
-  
-#   assign(paste0("alluvial_enrichment_", pattern), Overlap.sum, envir = .GlobalEnv)
-#   # write.csv(Overlap.sum, file=paste0("~/Rcode/megena/enrichment_", 
-#   #                                    overlap, "_drn.csv"))
-# }
-# save(list=ls()[grepl("alluvial_enrichment",ls())],
-#      file=paste0(output.path, "enrichment_alluvial/enrichment_alluvial_", reg, ".Rdata"))
-# print("Finished alluvial patterns enrichment in modules.")
-
-
-
-# #### DEG enrichment in modules ####
-# print("Starting DEG enrichment in modules.")
-# load(deglist.path)
-# tplist <- c("tp1", "tp2", "tp3")
-# for(tp in tplist){
-#   print(paste0("Processing time point: ", tp))
-#   degtp <- get(paste0("deg_", reg, "_", tp))
-#   degs <- degtp$label
-#   DEGs <- list()
-#   DEGs[["DEGs"]] <- degs
-  
-#   Object <- newGOM(DEGs,module_list,total.genes)
-  
-#   overlap.intersect <- getMatrix(Object, name="intersection")
-#   overlap.intersect.list <- getNestedList(Object, name="intersection")
-#   overlap.pval <- getMatrix(Object, name="pval")
-#   overlap.OR <- getMatrix(Object, name="odds.ratio")
-#   Overlap.sum <- cbind(overlap.intersect,overlap.pval,overlap.OR, overlap.intersect.list)
-#   Overlap.sum <- data.frame(Overlap.sum)
-#   Overlap.sum <- Overlap.sum %>% arrange(overlap.pval)
-  
-#   assign(paste0("deg_enrichment_", reg, "_", tp), Overlap.sum, envir = .GlobalEnv)
-# }
-# save(list=ls()[grepl("deg_enrichment",ls())], 
-#      file=paste0(output.path, "enrichment_DEGs/enrichment_degs_", reg, ".Rdata"))
-# print("Finished DEG enrichment in modules.")
-
 
 
 #### cellular function in modules using mithil association table ####
@@ -267,3 +194,82 @@ for(tp in timepoints){
   
   cat("Finished", tp, "\n\n")
 }
+
+
+# #### Alluvial patterns enrichment in modules ####
+
+# load(alluvial_patterns.path) # df_new
+# patterns <- df_new %>% select(MGI.symbol, diffexpressed_alltp)
+# genes_per_patterns <- aggregate(MGI.symbol~diffexpressed_alltp, data=patterns, FUN = function(x) paste0(x,collapse = '; '))
+# genes_per_patterns
+
+# data <- genes_per_patterns
+# colnames(genes_per_patterns)
+# output <- list()
+# for (i in 1:nrow(data)) {
+#   diffexpressed <- as.character(data$diffexpressed_alltp[i])
+#   print(diffexpressed)
+#   gene_list <- strsplit(data$MGI.symbol[i], "; ")[[1]]
+#   output[[diffexpressed]] <- gene_list
+# }
+
+# # Create individual df for each patterns
+# for (diffexpressed in names(output)) {
+#   assign(diffexpressed, output[[diffexpressed]])
+# }
+#
+# pattern_list <- unique(patterns$diffexpressed_alltp)
+
+# for(pattern in pattern_list){
+#   overlapgenes <- get(pattern)
+#   overlaplist <- list()
+#   overlaplist[["genes"]] <- overlapgenes
+
+#   Object <- newGOM(overlaplist, module_list, total.genes)
+
+#   overlap.intersect <- getMatrix(Object, name="intersection")
+#   overlap.intersect.list <- getNestedList(Object, name="intersection")
+#   overlap.pval <- getMatrix(Object, name="pval")
+#   overlap.OR <- getMatrix(Object, name="odds.ratio")
+#   Overlap.sum <- cbind(overlap.intersect,overlap.pval,overlap.OR, overlap.intersect.list)
+#   Overlap.sum <- data.frame(Overlap.sum)
+#   Overlap.sum <- Overlap.sum %>% arrange(overlap.pval)
+
+#   assign(paste0("alluvial_enrichment_", pattern), Overlap.sum, envir = .GlobalEnv)
+#   # write.csv(Overlap.sum, file=paste0("~/Rcode/megena/enrichment_", 
+#   #                                    overlap, "_drn.csv"))
+# }
+# save(list=ls()[grepl("alluvial_enrichment",ls())],
+#      file=paste0(output.path, "enrichment_alluvial/enrichment_alluvial_", reg, ".Rdata"))
+# print("Finished alluvial patterns enrichment in modules.")
+
+
+
+# #### DEG enrichment in modules ####
+# print("Starting DEG enrichment in modules.")
+# load(deglist.path)
+# tplist <- c("tp1", "tp2", "tp3")
+# for(tp in tplist){
+#   print(paste0("Processing time point: ", tp))
+#   degtp <- get(paste0("deg_", reg, "_", tp))
+#   degs <- degtp$label
+#   DEGs <- list()
+#   DEGs[["DEGs"]] <- degs
+
+#   Object <- newGOM(DEGs,module_list,total.genes)
+
+#   overlap.intersect <- getMatrix(Object, name="intersection")
+#   overlap.intersect.list <- getNestedList(Object, name="intersection")
+#   overlap.pval <- getMatrix(Object, name="pval")
+#   overlap.OR <- getMatrix(Object, name="odds.ratio")
+#   Overlap.sum <- cbind(overlap.intersect,overlap.pval,overlap.OR, overlap.intersect.list)
+#   Overlap.sum <- data.frame(Overlap.sum)
+#   Overlap.sum <- Overlap.sum %>% arrange(overlap.pval)
+
+#   assign(paste0("deg_enrichment_", reg, "_", tp), Overlap.sum, envir = .GlobalEnv)
+# }
+# save(list=ls()[grepl("deg_enrichment",ls())], 
+#      file=paste0(output.path, "enrichment_DEGs/enrichment_degs_", reg, ".Rdata"))
+# print("Finished DEG enrichment in modules.")
+
+
