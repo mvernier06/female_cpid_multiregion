@@ -2,6 +2,10 @@ rm(list = ls()) # rm R working space
 
 library(MEGENA)
 library(openxlsx)
+library(dplyr)
+library(tidyverse)
+library(biomaRt)
+
 
 project_path <- "/home/marinevernier/Documents/projets/"
 setwd(project_path)
@@ -442,3 +446,228 @@ ggplot(df_detected, aes(x = n_samples)) +
     title = "Genes weakly expressed across samples"
   )
 
+cpm_female_mean_X <- as.data.frame(cpm_female_X) %>%
+  rownames_to_column("gene") %>%
+  mutate(mean_female = rowMeans(across(-gene), na.rm = TRUE)) %>%
+  select(gene, mean_female)
+
+cpm_male_mean_X <- as.data.frame(cpm_male_X) %>%
+  rownames_to_column("gene") %>%
+  mutate(mean_male = rowMeans(across(-gene), na.rm = TRUE)) %>%
+  select(gene, mean_male)
+
+cpm_mean_both_X <- inner_join(cpm_female_mean_X, cpm_male_mean_X, by = "gene")
+
+ggplot(cpm_mean_both_X, aes(x = mean_male, y = mean_female)) +
+  geom_point(alpha = 0.5) +
+  theme_classic() +
+  labs(
+    x = "Expression moyenne males",
+    y = "Expression moyenne females",
+    title = "Expression moyenne des gènes"
+  )
+
+ggplot(cpm_mean_both_X, aes(x = log2(mean_male + 1),
+                     y = log2(mean_female + 1))) +
+  geom_point(alpha = 0.5) +
+  theme_classic()
+
+##################################################"
+# comparaison perte gene par chromosome : FEMALE
+counts_female <- read.table(raw_counts_female.path, header = TRUE,
+                            sep = "\t",
+                            comment.char = "#",
+                            stringsAsFactors = FALSE,
+                            check.names = FALSE)
+counts_female <- counts_female %>%
+  mutate(
+    Chr_clean = str_split(Chr, ";") %>% sapply(`[`, 1)
+  )
+
+rownames(counts_female) <- counts_female$Geneid
+
+# Formating colnames
+colnames(counts_female) <- sub(
+  "_R2\\.dedup\\.bam$",
+  "",
+  basename(colnames(counts_female))
+)
+colnames(counts_female) <- sub(
+  # "^([A-Za-z]+)([0-9]+)$",
+  "\\1.\\2",
+  colnames(counts_female)
+)
+counts_female$Geneid <-  str_replace(counts_female$Geneid, "\\..*", "") 
+
+counts_female <- inner_join(counts_female, ens2symbol, by=c("Geneid"="Gene.stable.ID"))
+counts_female <- counts_female %>% relocate(MGI.symbol, .before=Geneid) 
+counts_female <- counts_female[!duplicated(counts_female$MGI.symbol),] # remove duplicates to avoid alluvial errors (ex: pattern ns_ns_ns)
+
+
+# Ajouter l'information chromosome à la matrice filtrée
+counts_female_filtered_annot <- counts_female_filtered %>%
+  left_join(
+    counts_female %>%
+      dplyr::select(MGI.symbol, Chr_clean),
+    by = "MGI.symbol"
+  )
+
+# Nombre de gènes par chromosome dans la matrice brute
+n_brut <- counts_female %>%
+  group_by(Chr_clean) %>%
+  summarise(
+    n_genes_brut = n_distinct(MGI.symbol),
+    .groups = "drop"
+  )
+
+# Nombre de gènes par chromosome après filtrage
+n_filtre <- counts_female_filtered_annot %>%
+  group_by(Chr_clean) %>%
+  summarise(
+    n_genes_filtre = n_distinct(MGI.symbol),
+    .groups = "drop"
+  )
+
+# Fusion + calculs
+table_chr <- n_brut %>%
+  left_join(n_filtre, by = "Chr_clean") %>%
+  mutate(
+    n_genes_filtre = ifelse(is.na(n_genes_filtre), 0, n_genes_filtre),
+    n_genes_perdus = n_genes_brut - n_genes_filtre,
+    proportion_perdue = n_genes_perdus / n_genes_brut
+  ) %>%
+  arrange(desc(proportion_perdue))
+
+print(table_chr, n = 40)
+
+## MALE
+raw_counts_male <- read.csv(raw_counts_male.path, sep = ";")
+raw_counts_male$X <- str_replace(raw_counts_male$X, "\\..*", "")
+raw_counts_male <- inner_join(raw_counts_male, ens2symbol, by = c("X" = "Gene.stable.ID"))  
+raw_counts_male <- raw_counts_male[!duplicated(raw_counts_male$MGI.symbol),] # remove duplicates to avoid alluvial errors (ex: pattern ns_ns_ns)
+
+chr_annotation <- counts_female %>%
+  select(MGI.symbol, Chr_clean) %>%
+  distinct()
+
+# Ajouter l'information chromosome à counts_male
+counts_male <- raw_counts_male %>%
+  left_join(chr_annotation, by = "MGI.symbol")
+counts_male_filtered <- counts_male_filtered %>%
+  left_join(chr_annotation, by = "MGI.symbol")
+
+rownames(counts_male) <- counts_male$Geneid
+
+
+# Nombre de gènes par chromosome dans la matrice brute
+n_brut <- counts_male %>%
+  group_by(Chr_clean) %>%
+  summarise(
+    n_genes_brut = n_distinct(MGI.symbol),
+    .groups = "drop"
+  )
+
+# Nombre de gènes par chromosome après filtrage
+n_filtre <- counts_male_filtered %>%
+  group_by(Chr_clean) %>%
+  summarise(
+    n_genes_filtre = n_distinct(MGI.symbol),
+    .groups = "drop"
+  )
+
+# Fusion + calculs
+table_chr <- n_brut %>%
+  left_join(n_filtre, by = "Chr_clean") %>%
+  mutate(
+    n_genes_filtre = ifelse(is.na(n_genes_filtre), 0, n_genes_filtre),
+    n_genes_perdus = n_genes_brut - n_genes_filtre,
+    proportion_perdue = n_genes_perdus / n_genes_brut
+  ) %>%
+  arrange(desc(proportion_perdue))
+
+print(table_chr, n=40)
+
+## annotation type de gène 
+
+mart <- useEnsembl(
+  biomart = "genes",
+  dataset = "mmusculus_gene_ensembl",
+  version = 102
+)
+gene_annot <- getBM(
+  attributes = c(
+    "ensembl_gene_id",
+    "mgi_symbol",
+    "gene_biotype",
+    "description"
+  ),
+  filters = "ensembl_gene_id",
+  values = counts_female$Geneid,
+  mart = mart
+)
+
+counts_female_annot <- counts_female %>%
+  left_join(
+    gene_annot,
+    by = c(
+      "Geneid" = "ensembl_gene_id",
+      "MGI.symbol" = "mgi_symbol"
+    )
+  )
+
+counts_female_annot %>%
+  count(gene_biotype) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(gene_biotype, n), y = n)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_bw()
+
+counts_female_annot_filtered <- counts_female_filtered %>%
+  left_join(
+    gene_annot,
+    by = c(
+      "MGI.symbol" = "mgi_symbol"
+    )
+  )
+
+counts_female_annot_filtered %>%
+  count(gene_biotype) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(gene_biotype, n), y = n)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_bw()
+
+## MAles
+counts_male_annot <- counts_male %>%
+  left_join(
+    gene_annot,
+    by = c(
+      "X" = "ensembl_gene_id",
+      "MGI.symbol" = "mgi_symbol"
+    )
+  )
+
+counts_male_annot %>%
+  count(gene_biotype) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(gene_biotype, n), y = n)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_bw()
+
+counts_male_annot_filtered <- counts_male_filtered %>%
+  left_join(
+    gene_annot,
+    by = c(
+      "MGI.symbol" = "mgi_symbol"
+    )
+  )
+counts_male_annot_filtered %>%
+  count(gene_biotype) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(gene_biotype, n), y = n)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_bw()
