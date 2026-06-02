@@ -21,8 +21,6 @@ colnames(counts_male) <- gsub("NAc", "Nac", colnames(counts_male))
 
 common_regions <- c("Ins", "Nac", "Hb")
 timepoints <- c("tp1", "tp2", "tp3")
-reg <- "Ins"
-tp <- "tp1"
 
 for (reg in common_regions) {
   for (tp in timepoints) {
@@ -69,6 +67,8 @@ for (reg in common_regions) {
     RRHO_femalevsmale_l2fc_pval <- RRHO2_initialize(gene_list1, gene_list2, 
                                                     labels = c("female", "male"), 
                                                     log10.ind = TRUE)
+    filename <- file.path(output.path, paste0(reg,"_rrho_male_female_",tp,".Rdata"))
+    save(RRHO_femalevsmale_l2fc_pval, file = filename)
     filename <- file.path(plot.path,paste0("/",reg,"/",reg, "_male_vs_female_", tp, ".png"))
     png(file=filename, width = 750, height = 500, units = "px", res = 100)
     RRHO2_heatmap(RRHO_femalevsmale_l2fc_pval, main = paste0(reg, "male vs female ", tp))
@@ -76,26 +76,3 @@ for (reg in common_regions) {
     
     }
 }
-
-# Genelist of female.
-list1_DDE <- c(-log10(counts_noNA[counts_noNA$`log2FC.(F_Morphine_vs_F_Saline_subset)` < 0,]$`padj.(F_Morphine_vs_F_Saline_subset)`) * (-1), 
-               -log10(counts_noNA[counts_noNA$`log2FC.(F_Morphine_vs_F_Saline_subset)` > 0,]$`padj.(F_Morphine_vs_F_Saline_subset)`))
-gene_list1 <- data.frame(Genes=c(counts_noNA[counts_noNA$`log2FC.(F_Morphine_vs_F_Saline_subset)` < 0,]$gene_id, 
-                                 counts_noNA[counts_noNA$`log2FC.(F_Morphine_vs_F_Saline_subset)` > 0,]$gene_id),
-                         DDE = list1_DDE,
-                         stringsAsFactors = FALSE)
-# Genelist of male.
-list2_DDE <- c(-log10(counts_noNA[counts_noNA$`log2FC.(M_Morphine_vs_M_Saline_subset)` < 0,]$`padj.(M_Morphine_vs_M_Saline_subset)`) * (-1),
-               -log10(counts_noNA[counts_noNA$`log2FC.(M_Morphine_vs_M_Saline_subset)` > 0,]$`padj.(M_Morphine_vs_M_Saline_subset)`)) 
-gene_list2 <- data.frame(Genes=c(counts_noNA[counts_noNA$`log2FC.(M_Morphine_vs_M_Saline_subset)` < 0,]$gene_id, 
-                                 counts_noNA[counts_noNA$`log2FC.(M_Morphine_vs_M_Saline_subset)`> 0,]$gene_id),
-                         DDE = list2_DDE,
-                         stringsAsFactors = FALSE)
-
-
-RRHO_femalevsmale_l2fc_padj <- RRHO2_initialize(gene_list1, gene_list2, 
-                                                labels = c("female", "male"), 
-                                                log10.ind = TRUE)
-
-# save rrho objects
-save(RRHO_femalevsmale_l2fc_padj, file=paste0(output.path,"rrho_l2fc_padj.Rdata"))
