@@ -738,6 +738,65 @@ for(reg in common_reg){
 #######################
 ###  L2FC vs pvalue ###
 #######################
+
+counts_l2fc_female.path <- "/home/marinevernier/Documents/projets/female_cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
+counts_l2fc_female <- readRDS(counts_l2fc_female.path) %>% select(MGI.symbol, contains("log2fc"), contains("pval")) %>% select(MGI.symbol, contains("Ins"), contains("Nac"), contains("Hb"))
+
+counts_l2fc_male.path <- "/home/marinevernier/Documents/projets/cpid_multiregion/data/2__differential_expression_analysis/annotated_counts_filtered.rds"
+counts_l2fc_male <- readRDS(counts_l2fc_male.path) %>% select(MGI.symbol, contains("Ins"), contains("NAc"), contains("Hb"))
+
+female_long <- counts_l2fc_female %>%
+  pivot_longer(
+    cols = -MGI.symbol,
+    names_to = c("region", "metric", "tp"),
+    names_pattern = "(.*)_(log2fc|pval)_(tp\\d+)"
+  ) %>%
+  pivot_wider(
+    names_from = metric,
+    values_from = value
+  ) %>%
+  mutate(sex = "Female")
+
+male_long <- counts_l2fc_male %>%
+  pivot_longer(
+    cols = -MGI.symbol,
+    names_to = c("region", "metric", "tp"),
+    names_pattern = "(.*)_(log2fc|pval|padj)_(tp\\d+)"
+  ) %>%
+  filter(metric %in% c("log2fc", "pval")) %>%
+  pivot_wider(
+    names_from = metric,
+    values_from = value
+  ) %>%
+  mutate(sex = "Male",
+         region = case_when(
+           tolower(region) == "nac" ~ "Nac",  # corrige Nac/NAC/nac
+           TRUE ~ region                     # les autres restent identiques
+         )) 
+
+df_plot <- bind_rows(female_long, male_long)
+
+ggplot(df_plot, aes(x = pval, y = log2fc, color = region)) +
+  geom_point(alpha = 0.5, size = 1) +
+  geom_vline(xintercept = 0.05, linetype = "dashed",
+    color = "red",
+    linewidth = 0.5
+  ) +
+  facet_wrap(~sex) +
+  theme_bw() +
+  labs(
+    x = "Pvalue",
+    y = "Log2fc",
+    color = "Region"
+  )
+ggplot(df_plot, aes(x = pval, y = log2fc)) + 
+  geom_hex() +
+  geom_vline(xintercept = 0.05, linetype = "dashed", color = "red", linewidth = 0.5) +
+  scale_fill_viridis_c() +
+  facet_wrap(~ sex) +
+  theme_bw()
+
+# seulement avec les deg 
 ggplot(deg_fc, aes(x = pval, y = log2fc, col = reg)) + 
   geom_point(alpha = 0.5) + 
   facet_wrap(~ sex) +
